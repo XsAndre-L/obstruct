@@ -29,5 +29,29 @@ export class SettingsTab extends PluginSettingTab {
 						await this.pluginSettings.saveSettings();
 					})
 			);
+
+		new Setting(containerEl)
+			.setName("Custom Setting")
+			.setDesc("randm")
+			.addText((text) =>
+				text
+					.setPlaceholder("Enter your secret")
+					.setValue(this.pluginSettings.settings.mySetting)
+					.onChange(async (value) => {
+						console.log("Secret: " + value);
+						this.pluginSettings.settings.mySetting = value;
+						await this.pluginSettings.saveSettings();
+					})
+			)
+			.addText((text) =>
+				text
+					.setPlaceholder("Enter your secret")
+					.setValue(this.pluginSettings.settings.mySetting)
+					.onChange(async (value) => {
+						console.log("Secret: " + value);
+						this.pluginSettings.settings.mySetting = value;
+						await this.pluginSettings.saveSettings();
+					})
+			);
 	}
 }

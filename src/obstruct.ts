@@ -1,14 +1,8 @@
-import {
-	App,
-	Editor,
-	MarkdownView,
-	Modal,
-	Notice,
-	Plugin,
-	PluginManifest,
-} from "obsidian";
-import { SettingsTab } from "./settings-tab";
-import { PluginSettings } from "./plugin-settings";
+import { App, Editor, MarkdownView, Plugin, PluginManifest } from "obsidian";
+import { SettingsTab } from "./menus/settings-tab";
+import { PluginSettings } from "./menus/plugin-settings";
+import { ObstructSideBar } from "./menus/side-bar";
+import { ObsModalMenu } from "./menus/obstruct-modal-menu";
 
 // Remember to rename these classes and interfaces!
 
@@ -23,17 +17,8 @@ export default class MyPlugin extends Plugin {
 	async onload() {
 		await this.settings.loadSettings();
 
-		// This creates an icon in the left ribbon.
-		const ribbonIconEl = this.addRibbonIcon(
-			"dice",
-			"Obstruct",
-			(evt: MouseEvent) => {
-				// Called when the user clicks the icon.
-				new Notice("This is a notice!");
-			}
-		);
-		// Perform additional things with the ribbon
-		ribbonIconEl.addClass("my-plugin-ribbon-class");
+		const sidbar = new ObstructSideBar(app, this.manifest);
+		sidbar.addRibbon();
 
 		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
 		const statusBarItemEl = this.addStatusBarItem();
@@ -44,7 +29,7 @@ export default class MyPlugin extends Plugin {
 			id: "open-sample-modal-simple",
 			name: "Open sample modal (simple)",
 			callback: () => {
-				new SampleModal(this.app).open();
+				new ObsModalMenu(this.app, "cool").open();
 			},
 		});
 		// This adds an editor command that can perform some operation on the current editor instance
@@ -68,7 +53,7 @@ export default class MyPlugin extends Plugin {
 					// If checking is true, we're simply "checking" if the command can be run.
 					// If checking is false, then we want to actually perform the operation.
 					if (!checking) {
-						new SampleModal(this.app).open();
+						new ObsModalMenu(this.app, "Menu").open();
 					}
 
 					// This command will only show up in Command Palette when the check function returns true
@@ -80,6 +65,7 @@ export default class MyPlugin extends Plugin {
 		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new SettingsTab(this.app, this.settings));
 
+		// EVENTS
 		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
 		// Using this function will automatically remove the event listener when this plugin is disabled.
 		this.registerDomEvent(document, "click", (evt: MouseEvent) => {
@@ -93,30 +79,4 @@ export default class MyPlugin extends Plugin {
 	}
 
 	onunload() {}
-}
-
-class SampleModal extends Modal {
-	constructor(app: App) {
-		super(app);
-	}
-
-	onOpen() {
-		const { titleEl } = this;
-		titleEl.setText("Obstruct Commands");
-
-		const { contentEl } = this;
-		contentEl.innerHTML = `
-			<a href='https://github.com/obsidianmd/obsidian-api/blob/master/obsidian.d.ts'>HI DAAR</a>
-			
-			`;
-		// contentEl.setText("<a>HI DAAR</a>");
-
-		// const { containerEl } = this;
-		// containerEl.appendChild("hos");
-	}
-
-	onClose() {
-		const { contentEl } = this;
-		contentEl.empty();
-	}
 }
