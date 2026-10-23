@@ -29,9 +29,14 @@
 .obstruct-settings .setting-item {
   padding: var(--obstruct-card-padding);
   gap: 16px;
+  align-items: center;
 }
 
-.obstruct-settings .setting-item-control { gap: 8px; }
+.obstruct-settings .setting-item-control {
+  gap: 8px;
+  align-items: center;
+  align-self: center;
+}
 
 .obstruct-tabs {
   display: flex;
@@ -130,15 +135,18 @@
 }
 
 .obstruct-toolbar {
+  align-items: center;
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   margin: 12px 0;
 }
 
-.obstruct-resource .obstruct-toolbar { margin-bottom: 0; }
+.obstruct-resource .obstruct-toolbar {
+  align-items: center; margin-bottom: 0; }
 
 .obstruct-rule-tester {
+  align-items: center;
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
