@@ -11,7 +11,7 @@ export class WorkspaceView extends ItemView {
     private openFile: (path: string) => Promise<void>, private openSettings: () => void) { super(leaf); }
   getViewType(): string { return WORKSPACE_TYPE; }
   getDisplayText(): string { return this.config.active.displayName || "Obstruct Workspace"; }
-  getIcon(): string { return "folder-tree"; }
+  getIcon(): string { return "house"; }
   async onOpen(): Promise<void> {
     this.unsubscribe = this.config.subscribe(change => { if (change === "active") this.render(); }); this.render();
   }

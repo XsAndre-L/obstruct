@@ -20,7 +20,7 @@ export default class Obstruct extends Plugin {
     this.registerView(PREVIEW_TYPE, leaf => new ResourcePreview(leaf, config, resources, workspace.openFile));
     this.addSettingTab(settings);
     const show = () => void workspace.show().catch(e => new Notice(String(e)));
-    this.addRibbonIcon("folder-tree", "Open Obstruct workspace", show);
+    this.addRibbonIcon("house", "Open Obstruct workspace", show);
     this.addCommand({ id: "open-workspace", name: "Open workspace", callback: show });
     this.addCommand({ id: "open-workspace-settings", name: "Open workspace settings", callback: workspace.showSettings });
     this.addCommand({ id: "toggle-folder-focus", name: "Toggle workspace", callback: () => {
