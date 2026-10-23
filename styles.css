@@ -341,3 +341,5 @@
   outline: 2px solid var(--interactive-accent);
   outline-offset: 2px;
 }
+/* Native explorer exclusions must override theme display rules. */
+.obstruct-explorer-hidden { display: none !important; }

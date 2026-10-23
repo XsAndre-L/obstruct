@@ -1,6 +1,6 @@
 # Obstruct Workspace
 
-Obstruct gives a desktop Obsidian vault a display name and a dedicated Notes/Resources sidebar. Files stay in place; the native explorer stays available and unfiltered.
+Obstruct gives a desktop Obsidian vault a display name and a dedicated Notes/Resources sidebar. Files stay in place; the native explorer follows the enabled workspace roots and exclusions.
 
 ## Two ways to use it
 
@@ -45,7 +45,7 @@ Rules are case-sensitive, use forward slashes, and include dotfiles. Global rule
 
 Supports only *, ** and ?. Negation, brackets, braces and parent traversal in patterns are not supported. Single-file resources match their basename.
 
-**Exclusions filter Obstruct browsing only.** They do not stop native indexing or change Obsidian search, backlinks or graph results.
+**Exclusions filter Obstruct browsing and the native file explorer.** They do not stop native indexing or change Obsidian search, backlinks or graph results.
 
 ## External previews
 
@@ -91,3 +91,5 @@ Feature modules live under src/features; configuration, paths, filtering and UI 
 ## Verification
 
 Automated checks cover migration, save failures/concurrency, toggle/draft consistency, Windows paths, ignore semantics, bounded reads, missing/disabled resources, junctions, queue timeout/disposal, Markdown safety and display-name restoration. Packaged-plugin UI tests exercise draft persistence across settings closure, Apply/Discard, keyboard tabs, resource dialogs, ordering and Undo, remote-image placeholders, external-link boundaries and preview revocation. A live walkthrough must additionally cover settings dialogs, sidebar navigation, previews, keyboard focus, themes and reload/unload before deployment.
+
+While enabled, Obstruct hides native explorer entries outside Notes and enabled internal resources, entries matched by workspace ignore rules, and entries excluded through Obsidian Files and links settings. Parent folders needed to reach an enabled root stay visible. Disabling or unloading Obstruct restores explorer rows. This is a visual filter, not an indexing boundary. External resources remain in the Obstruct sidebar. Native explorer markup and the excluded-files lookup are Obsidian integration points that may require maintenance after app updates.

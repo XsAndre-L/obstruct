@@ -1,4 +1,6 @@
-import { FileSystemAdapter, Notice, Plugin } from "obsidian";
+import { ExplorerFilter } from "./features/explorer-filter/presentation";
+import { explorerVisible } from "./features/explorer-filter/visibility";
+import { Events, FileSystemAdapter, Notice, Plugin } from "obsidian";
 import { ConfigController } from "./shared/config/controller";
 import { ResourceService } from "./features/resources/service";
 import { DisplayName } from "./features/display-name/presentation";
@@ -15,6 +17,7 @@ export default class Obstruct extends Plugin {
     const config = new ConfigController(await this.loadData(), data => this.saveData(data), data => resources.validate(data));
     const workspace = new WorkspaceCoordinator(this.app, config, resources, this.manifest.id);
     const settings = new WorkspaceSettings(this.app, this, config, resources);
+    let explorer: ExplorerFilter | undefined;
     let name: DisplayName | undefined; let stopped = false;
     this.registerView(WORKSPACE_TYPE, leaf => new WorkspaceView(leaf, config, resources, workspace.openFile, workspace.showSettings));
     this.registerView(PREVIEW_TYPE, leaf => new ResourcePreview(leaf, config, resources, workspace.openFile));
@@ -28,15 +31,19 @@ export default class Obstruct extends Plugin {
     }});
     const unsubscribe = config.subscribe(change => {
       if (change !== "active") return;
+      explorer?.refresh();
       name?.update(config.active.displayName, config.active.enabled);
       if (config.active.enabled) show();
     });
     this.app.workspace.onLayoutReady(() => {
       if (stopped) return;
+      const metadata = this.app.metadataCache as typeof this.app.metadataCache & { isUserIgnored?: (path: string) => boolean };
+      explorer = new ExplorerFilter(document, (path, folder) => explorerVisible(resources, config.active, path, folder, value => metadata.isUserIgnored?.(value) ?? false));
       name = new DisplayName(document, this.app.vault.getName());
       name.update(config.active.displayName, config.active.enabled);
       if (config.active.enabled) show();
     });
-    this.register(() => { stopped = true; unsubscribe(); settings.hide(); workspace.dispose(); name?.dispose(); config.dispose(); resources.dispose(); });
+    this.registerEvent((this.app.vault as Events).on("config-changed", () => explorer?.schedule()));
+    this.register(() => { stopped = true; unsubscribe(); settings.hide(); workspace.dispose(); explorer?.dispose(); name?.dispose(); config.dispose(); resources.dispose(); });
   }
 }

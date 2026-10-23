@@ -1,3 +1,5 @@
+import { ExplorerFilter } from "../src/features/explorer-filter/presentation";
+import { explorerVisible } from "../src/features/explorer-filter/visibility";
 import { harness } from "./test-support/obsidian";
 import assert from "node:assert/strict";
 import * as fs from "node:fs/promises";
@@ -288,5 +290,40 @@ await test("Show more exists only while entries remain in the workspace and pick
       await new Promise(resolve => setTimeout(resolve, 0));
     } finally { ui.dispose(); await fs.rm(root, {recursive:true, force:true}); }
   }
+});
+await test("native explorer respects workspace roots, local ignores and native exclusions", () => {
+  const service = new ResourceService(path.resolve("test-vault"));
+  const config = migrate({mainNotesPath:"docs",ignore:["**/*.log"],resources:[
+    {id:"source",label:"Source",path:"frontend/src",enabled:true,ignore:["private/**"]},
+    {id:"file",label:"File",path:"one.txt",enabled:true,ignore:["*.txt"]},
+  ]});
+  const visible=(p:string,folder=false)=>explorerVisible(service,config,p,folder,p=>p==="docs/native.md");
+  assert.equal(visible("docs",true),true);
+  assert.equal(visible("docs/readme.md"),true);
+  assert.equal(visible("docs/nested/debug.log"),false);
+  assert.equal(visible("docs/native.md"),false);
+  assert.equal(visible("backend",true),false);
+  assert.equal(visible("frontend",true),true);
+  assert.equal(visible("frontend/docs",true),false);
+  assert.equal(visible("frontend/src/private",true),false);
+  assert.equal(visible("one.txt"),false);
+  config.enabled=false; assert.equal(visible("backend",true),true);
+  service.dispose();
+});
+await test("native explorer filtering refreshes inserted rows and restores on unload", async () => {
+  const dom = new JSDOM('<div data-type="file-explorer"><div class="nav-folder"><div class="nav-folder-title" data-path="backend">backend</div></div><div class="nav-folder"><div class="nav-folder-title" data-path="docs">docs</div></div></div><div data-path="backend" id="other">Other UI</div>');
+  const doc=dom.window.document; let enabled=true;
+  const filter=new ExplorerFilter(doc,p=>!enabled || p.startsWith("docs"));
+  assert.equal(doc.querySelectorAll(".obstruct-explorer-hidden").length,1);
+  assert.equal(doc.querySelector("#other")!.classList.contains("obstruct-explorer-hidden"),false);
+  const title=doc.querySelector('[data-path="backend"]')!;title.setAttribute("data-path","docs/new");
+  await new Promise(r=>setTimeout(r,70));
+  assert.equal(doc.querySelectorAll(".obstruct-explorer-hidden").length,0);
+  title.setAttribute("data-path","frontend");filter.refresh();
+  assert.equal(doc.querySelectorAll(".obstruct-explorer-hidden").length,1);
+  enabled=false;filter.refresh();assert.equal(doc.querySelectorAll(".obstruct-explorer-hidden").length,0);
+  enabled=true;filter.refresh();filter.dispose();
+  assert.equal(doc.querySelectorAll(".obstruct-explorer-hidden").length,0);
+  dom.window.close();
 });
 console.log(count + " checks passed.");

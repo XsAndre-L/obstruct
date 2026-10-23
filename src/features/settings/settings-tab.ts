@@ -101,7 +101,7 @@ export class WorkspaceSettings extends PluginSettingTab {
     const preview = el.createEl("pre");
     const tree = () => { preview.setText((this.config.draft.displayName || this.app.vault.getName()) + "\n  Notes\n  Resources" + this.config.draft.resources.filter(r => r.enabled).map(r => "\n    " + r.label).join("")); };
     tree(); void check();
-    el.createEl("p", { text: "Core note and attachment locations are unchanged. The native explorer remains available and unfiltered." });
+    el.createEl("p", { text: "Core note and attachment locations are unchanged. The native explorer follows workspace folders and exclusions while Obstruct is enabled." });
   }
   private resources(el: HTMLElement, epoch: number): void {
     const edit = (resource: ResourceConfig | null) => new ResourceDialog(this.app, this.service, resource, updated => {
@@ -140,7 +140,7 @@ export class WorkspaceSettings extends PluginSettingTab {
     if (this.removed.length) button(el, "Undo removal", () => { const item = this.removed.pop()!; this.config.edit(d => d.resources.splice(item.index, 0, item.resource)); this.render(); });
   }
   private ignores(el: HTMLElement): void {
-    el.createEl("p", { text: "These rules filter Obstruct browsing. They do not stop Obsidian indexing files or change native search and graph results." });
+    el.createEl("p", { text: "These rules filter Obstruct browsing and the native file explorer. They do not stop Obsidian indexing files or change native search and graph results." });
     el.createEl("p", { text: "One rule per line, relative to Notes and each resource root. Supports *, ** and ?. Exclusions win; matching folders exclude descendants." });
     const input = el.createEl("textarea", { attr: { rows: "6", "aria-label": "Global ignore rules" } }); input.value = this.config.draft.ignore.join("\n");
     const feedback = status(el);

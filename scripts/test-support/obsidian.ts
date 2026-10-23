@@ -20,7 +20,7 @@ export function harness(root: string) {
   const factories = new Map<string, any>(); const leaves: any[]=[]; const tabs: any[]=[]; const cleanup: (()=>void)[]=[];
   let ready = () => {}; let data: unknown = {displayName:"Workspace",mainNotesPath:".",resources:[],ignore:[]};
   const app: any = {
-    vault: { adapter: null, getName:()=>"docs", getAbstractFileByPath:()=>null },
+    vault: { on:()=>({}), adapter: null, getName:()=>"docs", getAbstractFileByPath:()=>null },
     workspace: {
       onLayoutReady:(fn:()=>void)=>{ready=fn;}, getLeavesOfType:(type:string)=>leaves.filter(l=>l.type===type),
       getLeftLeaf:()=>leaf(), getLeaf:()=>leaf(), revealLeaf:async()=>{},
@@ -42,7 +42,7 @@ export function harness(root: string) {
     async loadData(){return data;} async saveData(d:unknown){data=d;}
     registerView(type:string,factory:any){factories.set(type,factory);}
     addSettingTab(tab:any){tabs.push(tab);} addRibbonIcon(){return doc.createElement("button");}
-    addCommand(){} register(fn:()=>void){cleanup.push(fn);}
+    registerEvent(){} addCommand(){} register(fn:()=>void){cleanup.push(fn);}
   }
   class PluginSettingTab { containerEl: HTMLElement; constructor(public app:any, public plugin:any){this.containerEl=doc.createElement("section");doc.body.append(this.containerEl);} }
   class ItemView { app:any; contentEl:HTMLElement; constructor(public leaf:any){this.app=leaf.app;this.contentEl=doc.createElement("section");doc.body.append(this.contentEl);} }
