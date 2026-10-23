@@ -156,7 +156,7 @@ export class WorkspaceSettings extends PluginSettingTab {
     const select = tester.createEl("select", { attr: { "aria-label": "Rule test root" } });
     select.createEl("option", { text: "Notes", value: "notes" });
     for (const r of this.config.draft.resources) select.createEl("option", { text: r.label, value: r.id });
-    const test = tester.createEl("input", { attr: { "aria-label": "Path relative to selected root", placeholder: "nested/node_modules/package/index.js" } });
+    const test = tester.createEl("input", { attr: { type: "text", "aria-label": "Path relative to selected root", placeholder: "nested/node_modules/package/index.js" } });
     const result = status(el);
     const evaluate = () => {
       try {
