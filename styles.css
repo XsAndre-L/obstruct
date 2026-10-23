@@ -26,13 +26,13 @@
   min-width: 0;
 }
 
-.obstruct-settings .setting-item {
+:is(.obstruct-settings, .obstruct-dialog) .setting-item {
   padding: var(--obstruct-card-padding);
   gap: 16px;
   align-items: center;
 }
 
-.obstruct-settings .setting-item-control {
+:is(.obstruct-settings, .obstruct-dialog) .setting-item-control {
   gap: 8px;
   align-items: center;
   align-self: center;
@@ -70,28 +70,31 @@
 }
 
 /* Typography and section rhythm. */
-.obstruct-settings-content > h2 {
+.obstruct-settings-content > h2,
+.obstruct-dialog-title {
   margin: 0 0 24px;
   font-size: 24px;
   line-height: 1.25;
   font-weight: 650;
 }
 
-.obstruct-settings [role="tabpanel"] > h3 {
+.obstruct-settings [role="tabpanel"] > h3,
+.obstruct-dialog h3,
+.obstruct-dialog summary {
   margin: 28px 0 12px;
   font-size: 18px;
   line-height: 1.35;
   font-weight: 600;
 }
 
-.obstruct-settings .setting-item-name {
+:is(.obstruct-settings, .obstruct-dialog) .setting-item-name {
   font-size: var(--font-ui-medium);
   line-height: 1.4;
   font-weight: 550;
 }
 
-.obstruct-settings .setting-item-description,
-.obstruct-settings .obstruct-status {
+:is(.obstruct-settings, .obstruct-dialog) .setting-item-description,
+:is(.obstruct-settings, .obstruct-dialog) .obstruct-status {
   font-size: var(--font-ui-smaller);
   line-height: 1.5;
 }
@@ -157,7 +160,7 @@
   min-width: 0;
 }
 
-.obstruct-settings textarea {
+:is(.obstruct-settings, .obstruct-dialog) textarea {
   display: block;
   width: 100%;
   margin: 12px 0;
@@ -225,14 +228,65 @@
 @media (max-width: 600px) {
   .vertical-tab-content.obstruct-settings { --obstruct-page-padding: 20px; }
 
-  .obstruct-settings .setting-item {
+  :is(.obstruct-settings, .obstruct-dialog) .setting-item {
     flex-wrap: wrap;
     gap: 8px;
   }
 
-  .obstruct-settings .setting-item-control {
+  :is(.obstruct-settings, .obstruct-dialog) .setting-item-control {
     flex-wrap: wrap;
     width: 100%;
     justify-content: flex-start;
   }
 }
+
+
+/* Modal forms share card spacing and native control styles with settings. */
+.obstruct-dialog {
+  --obstruct-card-padding: 16px;
+  font-size: var(--font-ui-small);
+  line-height: 1.5;
+}
+
+.obstruct-dialog > p { margin: 12px 0 20px; }
+.obstruct-dialog > h3:first-child { margin-top: 0; }
+.obstruct-dialog details { margin: 20px 0; }
+.obstruct-dialog summary { cursor: pointer; }
+
+.obstruct-dialog-actions {
+  justify-content: flex-end;
+  border-top: 1px solid var(--background-modifier-border);
+  padding-top: 16px;
+  margin: 24px 0 0;
+}
+
+.obstruct-picker-navigation input {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.obstruct-dialog .obstruct-picker-list {
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-m);
+  padding: var(--obstruct-card-padding);
+}
+
+.obstruct-dialog .obstruct-picker-list:empty { display: none; }
+.obstruct-dialog .obstruct-picker-list > div {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.obstruct-dialog .obstruct-picker-list button {
+  margin: 0;
+  max-width: 100%;
+  height: auto;
+  min-height: var(--input-height);
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: left;
+}
+.modal .modal-content.obstruct-dialog .setting-item { padding: var(--obstruct-card-padding); }
