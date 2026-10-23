@@ -1,4 +1,5 @@
-import { ItemView, WorkspaceLeaf } from "obsidian";
+import { WorkspaceHelp } from "./help";
+import { ItemView, WorkspaceLeaf, setIcon } from "obsidian";
 import { ConfigController } from "../../shared/config/controller";
 import { ResourceService, Root } from "../resources/service";
 import { explain } from "../../shared/filtering/ignore";
@@ -16,20 +17,27 @@ export class WorkspaceView extends ItemView {
   }
   render(): void {
     const epoch = ++this.epoch; const el = this.contentEl; el.empty(); el.addClass("obstruct-workspace");
-    el.createEl("h3", { text: this.getDisplayText() });
-    el.createEl("p", { cls: "obstruct-workspace-intro", text: "Browse your Notes folder and added Resources. Expand a folder, then select a file to open it." });
-    const toolbar = el.createDiv({ cls: "obstruct-toolbar" });
-    button(toolbar, "Settings", this.openSettings).title = "Choose your notes folder, resources and ignore rules";
-    button(toolbar, "Recheck all", () => this.render()).title = "Check folder availability and refresh the tree";
-    el.createEl("p", { cls: "obstruct-workspace-help", text: "Vault files open in Obsidian. Supported files outside the vault open in a read-only preview." });
+    const header = el.createDiv({ cls: "obstruct-workspace-header" });
+    header.createEl("h3", { text: this.getDisplayText() });
+    const actions = header.createDiv({ cls: "obstruct-workspace-actions" });
+    this.iconAction(actions, "info", "About this workspace", () => new WorkspaceHelp(this.app).open());
+    this.iconAction(actions, "settings", "Workspace settings", this.openSettings);
+    this.iconAction(actions, "refresh-cw", "Recheck all", () => this.render());
     if (!this.config.active.enabled) { status(el, "Obstruct workspace is disabled. The native file explorer is unchanged."); return; }
     try {
       const roots = this.service.roots(this.config.active);
       void this.root(el, roots[0], epoch);
       el.createEl("h4", { text: "Resources" });
-      if (roots.length === 1) status(el, "No extra resources yet. Use Settings to add files or folders alongside your notes.");
+      if (roots.length === 1) status(el, "No resources added.");
       for (const root of roots.slice(1)) void this.root(el, root, epoch);
     } catch(e) { status(el, message(e)); button(el, "Review settings", this.openSettings); }
+  }
+  private iconAction(parent: HTMLElement, icon: string, label: string, action: () => void): void {
+    const control = button(parent, "", action);
+    control.addClass("clickable-icon");
+    control.setAttribute("aria-label", label);
+    control.title = label;
+    setIcon(control, icon);
   }
   private async root(parent: HTMLElement, root: Root, epoch: number): Promise<void> {
     const container = parent.createDiv({ cls: "obstruct-root" }); const feedback = status(container, root.label + " · Checking…");

@@ -60,7 +60,7 @@ export function harness(root: string) {
     addToggle(fn:(control:any)=>void){const input=doc.createElement("input");input.type="checkbox";this.el.append(input);const control:any={setValue:(v:boolean)=>{input.checked=v;return control;},onChange:(cb:any)=>{input.addEventListener("change",()=>cb(input.checked));return control;}};fn(control);return this;}
     addButton(fn:(control:any)=>void){const el=doc.createElement("button");this.el.append(el);const control:any={setButtonText:(v:string)=>{el.textContent=v;return control;},onClick:(cb:any)=>{el.addEventListener("click",cb);return control;}};fn(control);return this;}
   }
-  const obsidian={Plugin,FileSystemAdapter,PluginSettingTab,ItemView,Modal,Setting,Notice:class{},TFile:class{}};
+  const obsidian={setIcon:(el:HTMLElement,icon:string)=>{el.setAttribute("data-icon",icon);},Plugin,FileSystemAdapter,PluginSettingTab,ItemView,Modal,Setting,Notice:class{},TFile:class{}};
   const realRequire=createRequire(import.meta.url); const module={exports:{} as any};
   const context=vm.createContext({module,exports:module.exports,require:(name:string)=>name==="obsidian"?obsidian:realRequire(name),
     window:dom.window,document:doc,navigator:dom.window.navigator,MutationObserver:dom.window.MutationObserver,
