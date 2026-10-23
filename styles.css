@@ -1,12 +1,14 @@
+.vertical-tab-content.obstruct-settings { display: flex; flex-direction: column; height: 100%; min-height: 0; padding: 0; overflow: hidden; }
+.obstruct-settings-content { flex: 1 1 0; min-height: 0; overflow-y: auto; padding: 32px; }
 .obstruct-fields { border: 0; padding: 0; margin: 0; min-width: 0; }
 .obstruct-tabs { display: flex; gap: var(--size-4-2); border-bottom: 1px solid var(--background-modifier-border); margin-bottom: var(--size-4-4); padding-bottom: var(--size-4-2); flex-wrap: wrap; }
 .obstruct-tabs [aria-selected="true"] { background: var(--interactive-accent); color: var(--text-on-accent); }
 .obstruct-status { color: var(--text-muted); font-size: var(--font-ui-small); overflow-wrap: anywhere; white-space: pre-wrap; }
 .obstruct-status:empty { display: none; }
-.obstruct-actions { position: sticky; bottom: 0; background: var(--background-primary); display: flex; gap: var(--size-4-2); align-items: center; flex-wrap: wrap; padding: var(--size-4-3) 0; border-top: 1px solid var(--background-modifier-border); z-index: 1; }
+.obstruct-actions { flex: 0 0 auto; background: var(--background-primary); display: flex; gap: var(--size-4-2); align-items: center; flex-wrap: wrap; padding: var(--size-4-3) 32px; border-top: 1px solid var(--background-modifier-border); }
 .obstruct-actions .obstruct-status { flex: 1; min-width: 8em; }
 .obstruct-resource { border: 1px solid var(--background-modifier-border); border-radius: var(--radius-m); padding: var(--size-4-3); margin: var(--size-4-3) 0; }
-.obstruct-resource button, .obstruct-picker-list button { margin: var(--size-2-1); }
+.obstruct-picker-list button { margin: var(--size-2-1); }
 .obstruct-settings textarea { width: 100%; resize: vertical; }
 .obstruct-settings pre, .obstruct-preview pre { white-space: pre-wrap; overflow-wrap: anywhere; }
 .obstruct-children { padding-left: var(--size-4-3); border-left: 1px solid var(--background-modifier-border); }
@@ -22,3 +24,30 @@
   .obstruct-settings .setting-item { flex-wrap: wrap; gap: var(--size-4-2); }
   .obstruct-settings .setting-item-control { flex-wrap: wrap; width: 100%; justify-content: flex-start; }
 }
+
+.obstruct-settings-content > h2 { margin: 0 0 24px; }
+.obstruct-settings .setting-item { padding: 16px 0; gap: 16px; }
+.obstruct-settings .setting-item-control { gap: 8px; }
+.obstruct-settings .obstruct-tabs { gap: 8px; margin: 8px 0 24px; padding-bottom: 12px; }
+.obstruct-settings [role="tabpanel"] > p { margin: 12px 0 20px; line-height: 1.5; }
+.obstruct-settings [role="tabpanel"] > h3 { margin: 28px 0 12px; }
+.obstruct-settings [role="tabpanel"] > pre { margin: 0 0 20px; padding: 16px; border-radius: var(--radius-m); background: var(--background-secondary); }
+.obstruct-toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+.obstruct-resource { padding: 16px; margin: 16px 0; }
+.obstruct-resource .setting-item { padding-top: 0; }
+.obstruct-resource .obstruct-toolbar { margin-bottom: 0; }
+.obstruct-actions { gap: 12px; }
+.obstruct-actions .obstruct-status { margin: 0; }
+.obstruct-rule-tester { display: flex; flex-wrap: wrap; gap: 12px; }
+.obstruct-rule-tester input { flex: 1 1 220px; min-width: 0; }
+.obstruct-settings textarea { display: block; margin: 12px 0; }
+@media (max-width: 600px) {
+  .obstruct-settings-content { padding: 20px; }
+  .obstruct-actions { padding: 12px 20px; }
+}
+.obstruct-settings { font-size: var(--font-ui-small); line-height: 1.5; }
+.obstruct-settings-content > h2 { font-size: 24px; line-height: 1.25; font-weight: 650; }
+.obstruct-settings [role="tabpanel"] > h3 { font-size: 18px; line-height: 1.35; font-weight: 600; }
+.obstruct-settings .setting-item-name { font-size: var(--font-ui-medium); line-height: 1.4; font-weight: 550; }
+.obstruct-settings .setting-item-description, .obstruct-settings .obstruct-status { font-size: var(--font-ui-smaller); line-height: 1.5; }
+.obstruct-settings .obstruct-tabs button { font-size: var(--font-ui-small); font-weight: 600; }

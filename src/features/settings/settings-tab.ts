@@ -42,8 +42,9 @@ export class WorkspaceSettings extends PluginSettingTab {
   }
   private render(): void {
     const epoch = ++this.epoch; const el = this.containerEl; el.empty(); el.addClass("obstruct-settings");
-    el.createEl("h2", { text: "Obstruct Workspace" });
-    const fieldset = el.createEl("fieldset", { cls: "obstruct-fields" }); fieldset.disabled = this.config.busy;
+    const content = el.createDiv({ cls: "obstruct-settings-content" });
+    content.createEl("h2", { text: "Obstruct Workspace" });
+    const fieldset = content.createEl("fieldset", { cls: "obstruct-fields" }); fieldset.disabled = this.config.busy;
     new Setting(fieldset).setName("Enable workspace").setDesc("Pending changes take effect after Apply.").addToggle(t =>
       t.setValue(this.config.draft.enabled).onChange(v => this.config.edit(d => { d.enabled = v; })));
     const tabs = fieldset.createDiv({ cls: "obstruct-tabs", attr: { role: "tablist", "aria-label": "Obstruct settings" } });
@@ -69,9 +70,9 @@ export class WorkspaceSettings extends PluginSettingTab {
     this.apply = button(bar, "Apply changes", async () => {
       try { await this.config.apply(); }
       catch (e) {
-        const text = message(e); status(this.containerEl, text);
+        const text = message(e); status(content, text);
         const target: Tab = text.startsWith("Resources:") ? "Resources" : text.startsWith("Workspace:") ? "Workspace" : "Ignore rules";
-        button(this.containerEl, "Review " + target, () => { this.tab = target; this.render(); });
+        button(content, "Review " + target, () => { this.tab = target; this.render(); });
       }
     }); this.apply.addClass("mod-cta"); this.validateDraft();
   }
@@ -107,8 +108,9 @@ export class WorkspaceSettings extends PluginSettingTab {
       this.config.edit(d => { const index = d.resources.findIndex(r => r.id === updated.id); if (index < 0) d.resources.push(updated); else d.resources[index] = updated; });
       this.render();
     }).open();
-    button(el, "Add resource", () => edit(null)); const checks: (() => Promise<void>)[] = [];
-    button(el, "Recheck all", async () => { await Promise.all(checks.map(check => check())); });
+    const toolbar = el.createDiv({ cls: "obstruct-toolbar" });
+    button(toolbar, "Add resource", () => edit(null)); const checks: (() => Promise<void>)[] = [];
+    button(toolbar, "Recheck all", async () => { await Promise.all(checks.map(check => check())); });
     if (!this.config.draft.resources.length) el.createEl("p", { text: "Add folders or files to access alongside your notes." });
     this.config.draft.resources.forEach((resource, index) => {
       const row = el.createDiv({ cls: "obstruct-resource" });
@@ -125,11 +127,12 @@ export class WorkspaceSettings extends PluginSettingTab {
         } catch (e) { if (epoch === this.epoch && id === generation) feedback.setText(message(e)); }
       };
       checks.push(check); void check();
-      button(row, "Edit", () => edit(resource)); button(row, "Recheck", check);
+      const actions = row.createDiv({ cls: "obstruct-toolbar" });
+      button(actions, "Edit", () => edit(resource)); button(actions, "Recheck", check);
       for (const [label, delta] of [["Move up", -1], ["Move down", 1]] as const) {
-        button(row, label, () => { this.config.edit(d => { const [item] = d.resources.splice(index, 1); d.resources.splice(index + delta, 0, item); }); this.render(); }).disabled = index + delta < 0 || index + delta >= this.config.draft.resources.length;
+        button(actions, label, () => { this.config.edit(d => { const [item] = d.resources.splice(index, 1); d.resources.splice(index + delta, 0, item); }); this.render(); }).disabled = index + delta < 0 || index + delta >= this.config.draft.resources.length;
       }
-      button(row, "Remove", () => {
+      button(actions, "Remove", () => {
         this.removed.push({ resource, index }); this.config.edit(d => { d.resources.splice(index, 1); }); this.render();
         this.containerEl.querySelector<HTMLElement>('[role="tabpanel"] button')?.focus();
       });
@@ -145,13 +148,15 @@ export class WorkspaceSettings extends PluginSettingTab {
       this.config.edit(d => { d.ignore = lines(input.value); });
       try { this.config.draft.ignore.forEach(validatePattern); feedback.setText(""); } catch(e) { feedback.setText(message(e)); }
     });
-    button(el, "Add dependency preset", () => { this.config.edit(d => { d.ignore = [...new Set([...d.ignore, "**/node_modules/**"])]; }); this.render(); });
-    button(el, "Add build-output preset", () => { this.config.edit(d => { d.ignore = [...new Set([...d.ignore, "**/dist/**", "**/build/**"])]; }); this.render(); });
+    const presets = el.createDiv({ cls: "obstruct-toolbar" });
+    button(presets, "Add dependency preset", () => { this.config.edit(d => { d.ignore = [...new Set([...d.ignore, "**/node_modules/**"])]; }); this.render(); });
+    button(presets, "Add build-output preset", () => { this.config.edit(d => { d.ignore = [...new Set([...d.ignore, "**/dist/**", "**/build/**"])]; }); this.render(); });
     el.createEl("h3", { text: "Test a path" });
-    const select = el.createEl("select", { attr: { "aria-label": "Rule test root" } });
+    const tester = el.createDiv({ cls: "obstruct-rule-tester" });
+    const select = tester.createEl("select", { attr: { "aria-label": "Rule test root" } });
     select.createEl("option", { text: "Notes", value: "notes" });
     for (const r of this.config.draft.resources) select.createEl("option", { text: r.label, value: r.id });
-    const test = el.createEl("input", { attr: { "aria-label": "Path relative to selected root", placeholder: "nested/node_modules/package/index.js" } });
+    const test = tester.createEl("input", { attr: { "aria-label": "Path relative to selected root", placeholder: "nested/node_modules/package/index.js" } });
     const result = status(el);
     const evaluate = () => {
       try {
