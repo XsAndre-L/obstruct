@@ -1,4 +1,24 @@
-/* Scoped to rows tagged by Obstruct. Removed when focus is disabled or unloaded. */
-.obstruct-hidden {
-  display: none !important;
+.obstruct-fields { border: 0; padding: 0; margin: 0; min-width: 0; }
+.obstruct-tabs { display: flex; gap: var(--size-4-2); border-bottom: 1px solid var(--background-modifier-border); margin-bottom: var(--size-4-4); padding-bottom: var(--size-4-2); flex-wrap: wrap; }
+.obstruct-tabs [aria-selected="true"] { background: var(--interactive-accent); color: var(--text-on-accent); }
+.obstruct-status { color: var(--text-muted); font-size: var(--font-ui-small); overflow-wrap: anywhere; white-space: pre-wrap; }
+.obstruct-status:empty { display: none; }
+.obstruct-actions { position: sticky; bottom: 0; background: var(--background-primary); display: flex; gap: var(--size-4-2); align-items: center; flex-wrap: wrap; padding: var(--size-4-3) 0; border-top: 1px solid var(--background-modifier-border); z-index: 1; }
+.obstruct-actions .obstruct-status { flex: 1; min-width: 8em; }
+.obstruct-resource { border: 1px solid var(--background-modifier-border); border-radius: var(--radius-m); padding: var(--size-4-3); margin: var(--size-4-3) 0; }
+.obstruct-resource button, .obstruct-picker-list button { margin: var(--size-2-1); }
+.obstruct-settings textarea { width: 100%; resize: vertical; }
+.obstruct-settings pre, .obstruct-preview pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+.obstruct-children { padding-left: var(--size-4-3); border-left: 1px solid var(--background-modifier-border); }
+.obstruct-file { display: block; text-align: left; width: 100%; height: auto; white-space: normal; margin: var(--size-2-1) 0; }
+.obstruct-root { margin: var(--size-4-3) 0; }
+.obstruct-root summary { cursor: pointer; padding: var(--size-4-2) 0; overflow-wrap: anywhere; }
+.obstruct-preview img { max-width: 100%; height: auto; }
+.obstruct-preview a[role="button"] { cursor: pointer; text-decoration: underline; color: var(--text-accent); }
+.obstruct-preview table { border-collapse: collapse; }
+.obstruct-preview td, .obstruct-preview th { border: 1px solid var(--background-modifier-border); padding: var(--size-4-2); }
+.obstruct-picker-list { max-height: 50vh; overflow: auto; }
+@media (max-width: 600px) {
+  .obstruct-settings .setting-item { flex-wrap: wrap; gap: var(--size-4-2); }
+  .obstruct-settings .setting-item-control { flex-wrap: wrap; width: 100%; justify-content: flex-start; }
 }

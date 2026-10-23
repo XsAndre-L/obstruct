@@ -4,8 +4,8 @@ const production = Bun.argv.includes("--production");
 if (production) await import("./typecheck.ts");
 const result = await Bun.build({
   entrypoints: ["src/obstruct.ts"],
-  external: ["obsidian"],
-  target: "browser",
+  external: ["obsidian", "electron"],
+  target: "node",
   format: "cjs",
   sourcemap: production ? "none" : "inline",
 });

@@ -1,67 +1,93 @@
-# Obstruct
+# Obstruct Workspace
 
-Give an Obsidian vault a reusable display name and focus its file explorer on one folder without moving or renaming files.
+Obstruct gives a desktop Obsidian vault a display name and a dedicated Notes/Resources sidebar. Files stay in place; the native explorer stays available and unfiltered.
 
-## Example: WebAppStack
+## Two ways to use it
 
-Open the **WebAppStack repository folder** as the vault. Under **Settings → Obstruct**, set:
+| Actual vault | Main notes folder | Resource example |
+| --- | --- | --- |
+| WebAppStack repository | docs | frontend/docs |
+| WebAppStack/docs | . | ../frontend/docs |
 
-| Setting | Value |
+All relative resource paths resolve from the actual vault root. Parent paths, other Windows drives and UNC paths are supported. Main notes must remain inside the vault. Opening another folder as a vault is an explicit Obsidian action; Obstruct never moves or reopens your vault.
+
+## Settings
+
+Open **Settings → Obstruct**, or use **Obstruct: Open workspace settings**.
+
+- **Workspace:** enabled state, display name, actual vault path, main notes folder and preview.
+- **Resources:** add files/folders, browse, label, enable, reorder, edit, remove/undo, and recheck availability.
+- **Ignore rules:** global exclusions, optional presets and a path tester with matching-rule explanations.
+
+Changes remain pending across tabs and settings closure. **Apply changes** validates and saves once; **Discard changes** restores the active configuration. Drafts do not survive plugin reload. Removing a resource never deletes files.
+
+The toggle command changes active enabled state and the draft's enabled field together; other pending edits are retained.
+
+## Sidebar and availability
+
+Obstruct opens in the left sidebar when enabled. Notes appears first, then ordered Resources. Expand a folder to load its children; roots are checked at startup without recursive crawling. Large folders display in batches.
+
+Missing or unreadable resources remain visible with Retry. They are checked on expansion, opening, or Recheck; there is no polling. Linked files, symbolic links and junctions are skipped, including linked parent paths. Assign their actual target instead.
+
+Overlapping resource roots are allowed. Repeated files can appear under different roots, with independent exclusions. Duplicate resolved resource roots are rejected.
+
+## Ignore syntax
+
+Rules are case-sensitive, use forward slashes, and include dotfiles. Global rules are relative to Notes and each resource; local rules are relative to their resource. Any matching exclusion wins. Matching a directory excludes descendants.
+
+| Pattern | Meaning |
 | --- | --- |
-| Enable focus | On |
-| Display name | WebAppStack |
-| Visible folder | docs |
+| node_modules | Root-level dependency directory and descendants |
+| **/node_modules/** | Dependency directories at any depth, including the root |
+| *.log | Root-level log files |
+| **/*.log | Log files at any depth |
+| a/?.txt | One-character filenames under a |
 
-Click **Apply**. The main window's vault labels use the display name, and the file explorer shows the docs folder and its contents. For another project, use its own name and folder. Settings are stored separately in each vault.
+Supports only *, ** and ?. Negation, brackets, braces and parent traversal in patterns are not supported. Single-file resources match their basename.
 
-A nested folder such as notes/project is supported; its ancestors remain visible so the tree remains navigable. Blank display name uses the real vault name. Blank visible folder shows all files. A missing folder fails open, restoring the full explorer. The command **Obstruct: Toggle folder focus** temporarily restores the normal name and explorer.
+**Exclusions filter Obstruct browsing only.** They do not stop native indexing or change Obsidian search, backlinks or graph results.
 
-## Scope and limitations
+## External previews
 
-- This is a **presentation filter**, not a smaller vault or an access boundary.
-- Search, graph, backlinks, quick switcher and indexing still cover the full vault. Existing links can open files outside the visible folder.
-- Core new-note and attachment locations are not changed. Set them to docs and docs/assets under **Settings → Files and links** if desired.
-- Repository dependency and generated folders remain within the vault's scope; this plugin does not reduce indexing cost.
-- Names are changed in supported main-window labels and title formats, not on disk or in the vault registry. The global Manage Vaults dialog, other vaults, Obsidian URIs and detached windows keep their original identities.
-- Desktop only. Presentation uses Obsidian DOM selectors because there is no public API for these UI customizations. Future Obsidian versions or themes may need selector updates.
-- Disabling or unloading Obstruct restores its own changes. It never deletes, moves or renames notes, and it does not rewrite core settings.
+Internal notes use Obsidian's native file opening. External supported files open in a dedicated read-only preview with **Open in default app**.
 
-## Install
+- UTF-8 text and Markdown: up to 2 MiB.
+- PNG, JPEG, GIF and WebP images: up to 10 MiB.
+- Other formats and larger files: open externally.
+- Markdown renders headings, tables, lists and code. Raw HTML is escaped; output is sanitized; Obsidian plugin renderers and executable embeds are not invoked.
+- Local links and images are previewed only within enabled roots and subject to ignore rules. Other local targets offer explicit external opening.
+- Remote images load only on click, without credentials. Redirects and non-image responses are rejected. Network/CORS failures are shown without breaking the preview.
+- Disabling/removing a resource invalidates its preview. Missing files show an unavailable state.
 
-1. Build this repository with Bun 1.4.3 or newer:
-   `bun install --frozen-lockfile`, then `bun run build`.
-2. Create `<vault>/.obsidian/plugins/obsidian-sample-plugin/`.
-3. Copy `main.js`, `manifest.json` and `styles.css` into it.
-4. Reload Obsidian. Enable **Obstruct** under **Settings → Community plugins**.
-5. Open **Settings → Obstruct**, enter your name and folder, then click **Apply**.
+Names affect supported main-window labels and title formats, not filesystem names, vault registry identities or the global vault manager. Name-label integration relies on Obsidian UI selectors. Native file explorer filtering from 1.1 is replaced by the dedicated sidebar.
 
-The historical plugin ID **obsidian-sample-plugin** is deliberately retained so existing Obstruct installations and settings remain associated with the update. Do not install it alongside the original Obsidian sample plugin, which shares that ID.
+## Install and update
 
-To update, disable Obstruct, replace the three release files, then enable it. Keep your existing data.json. Old sample settings migrate to safe defaults with no folder filtering.
+Use Bun 1.4.3 or newer:
+
+1. bun install --frozen-lockfile
+2. bun run package
+3. Copy main.js, manifest.json and styles.css from dist/obsidian-sample-plugin into the actual vault's .obsidian/plugins/obsidian-sample-plugin folder.
+4. Enable Obstruct under Community plugins, or reload it after an update.
+
+Keep data.json during upgrades. Older visibleFolder settings migrate to the main notes path; blank becomes a dot. Existing display name and enabled state are preserved.
+
+The historical plugin ID obsidian-sample-plugin is retained for compatibility; do not install the original sample plugin beside it.
 
 ## Development
 
-- `bun run dev`: rebuild when source changes.
-- `bun run build`: TypeScript validation and production bundle.
-- `bun run test`: path validation, migration, DOM filtering and restoration checks.
-- `bun run package`: build and copy the three installable files to dist/obsidian-sample-plugin.
+Work on dev. Use Bun exclusively and keep bun.lock as the only lockfile. All authored scripts are TypeScript.
 
-Use Bun exclusively for installs and scripts. All authored scripts are TypeScript under scripts/ and run directly with Bun. Bun also produces the CommonJS main.js required by Obsidian. Dependencies are pinned in bun.lock; do not generate npm or Yarn lockfiles. The old sample commands, logging, and placeholder components have been removed.
+- bun run dev — rebuild on changes.
+- bun run typecheck — validate source and scripts.
+- bun run test — regression checks.
+- bun run package — validate and build the installable CommonJS plugin.
+- bun run version — synchronize package version into manifest and compatibility metadata.
 
-## Manual acceptance checks
+The plugin executes inside Obsidian's Electron runtime. Bun is the development tool, not a plugin-runtime dependency.
 
-The automated DOM checks do not replace a live Obsidian check. In a disposable repository vault:
+Feature modules live under src/features; configuration, paths, filtering and UI helpers are shared under src/shared. The entrypoint wires lifecycle and registrations.
 
-1. Include docs, docs-old, backend, a root README, and docs/README.md.
-2. Set a custom display name and docs. Confirm only docs is shown in the explorer, including after collapsing/reopening it.
-3. Open a note and switch tabs. Confirm the title remains correct.
-4. Create, rename and delete sibling folders. Confirm new siblings stay hidden.
-5. Try a nested folder. Confirm its ancestors remain visible.
-6. Rename or delete the focused folder externally. Confirm the explorer fails open.
-7. Disable/re-enable the plugin and restart Obsidian. Confirm restoration and saved settings.
-8. Confirm core search can still find an outside note; focus intentionally does not block it.
+## Verification
 
-## API references
-
-- [Obsidian API](https://github.com/obsidianmd/obsidian-api)
-- [Obsidian files and links settings](https://obsidian.md/help/settings)
+Automated checks cover migration, save failures/concurrency, toggle/draft consistency, Windows paths, ignore semantics, bounded reads, missing/disabled resources, junctions, queue timeout/disposal, Markdown safety and display-name restoration. Packaged-plugin UI tests exercise draft persistence across settings closure, Apply/Discard, keyboard tabs, resource dialogs, ordering and Undo, remote-image placeholders, external-link boundaries and preview revocation. A live walkthrough must additionally cover settings dialogs, sidebar navigation, previews, keyboard focus, themes and reload/unload before deployment.
