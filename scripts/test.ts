@@ -1,15 +1,9 @@
-import { build } from "esbuild";
 import { JSDOM } from "jsdom";
 import assert from "node:assert/strict";
-
-async function load(path) {
-  const result = await build({ entryPoints: [path], bundle: true, write: false, format: "esm", platform: "node" });
-  return import("data:text/javascript;base64," + Buffer.from(result.outputFiles[0].text).toString("base64"));
-}
-const { normalizeFolder, readSettings, isVisible } = await load("src/focus-settings.ts");
-const { FocusPresentation } = await load("src/focus-presentation.ts");
+import { normalizeFolder, readSettings, isVisible } from "../src/focus-settings";
+import { FocusPresentation } from "../src/focus-presentation";
 let passed = 0;
-function test(name, fn) { fn(); passed++; console.log("PASS " + name); }
+function test(name: string, fn: () => void) { fn(); passed++; console.log("PASS " + name); }
 
 test("normalize Windows and nested paths", () => {
   assert.equal(normalizeFolder(" ./notes\\project/ "), "notes/project");
@@ -38,7 +32,7 @@ test("filter explorer only; preserve selected folder, descendants and root", () 
   const { doc, ui } = fixture();
   ui.apply(settings, true);
   assert.equal(doc.querySelectorAll(".obstruct-hidden").length, 2);
-  assert.equal(doc.querySelector('[data-path="docs"]').parentElement.classList.contains("obstruct-hidden"), false);
+  assert.equal(doc.querySelector('[data-path="docs"]')!.parentElement!.classList.contains("obstruct-hidden"), false);
   assert.equal(doc.querySelector('[data-type="search"] .obstruct-hidden'), null);
 });
 test("name and title are cosmetic; repeated refresh is stable", () => {
@@ -46,10 +40,10 @@ test("name and title are cosmetic; repeated refresh is stable", () => {
   ui.apply(settings, true);
   ui.apply(settings, true);
   assert.equal(doc.title, "Home - WebAppStack - Obsidian v1.14.4");
-  assert.equal(doc.querySelector(".workspace-drawer-vault-name").textContent, "WebAppStack");
+  assert.equal(doc.querySelector(".workspace-drawer-vault-name")!.textContent, "WebAppStack");
   ui.dispose();
   assert.equal(doc.title, "Home - Project - Obsidian v1.14.4");
-  assert.equal(doc.querySelector(".workspace-drawer-vault-name").textContent, "Project");
+  assert.equal(doc.querySelector(".workspace-drawer-vault-name")!.textContent, "Project");
   assert.equal(doc.querySelectorAll(".obstruct-hidden").length, 0);
 });
 test("missing folder and disabling both restore explorer", () => {
@@ -58,14 +52,14 @@ test("missing folder and disabling both restore explorer", () => {
   ui.apply(settings, false);
   assert.equal(doc.querySelectorAll(".obstruct-hidden").length, 0);
   ui.apply({ ...settings, enabled: false }, true);
-  assert.equal(doc.querySelector(".workspace-drawer-vault-name").textContent, "Project");
+  assert.equal(doc.querySelector(".workspace-drawer-vault-name")!.textContent, "Project");
 });
 test("resetting settings restores labels and visibility", () => {
   const { doc, ui } = fixture();
   ui.apply(settings, true);
   ui.apply(readSettings(null), true);
   assert.equal(doc.querySelectorAll(".obstruct-hidden").length, 0);
-  assert.equal(doc.querySelector(".workspace-drawer-vault-name").textContent, "Project");
+  assert.equal(doc.querySelector(".workspace-drawer-vault-name")!.textContent, "Project");
 });
 test("new rows are filtered after refresh", () => {
   const { doc, ui } = fixture();
@@ -73,7 +67,7 @@ test("new rows are filtered after refresh", () => {
   const row = doc.createElement("div");
   row.className = "nav-folder";
   row.innerHTML = '<div class="nav-folder-title" data-path="backend">backend</div>';
-  doc.querySelector('[data-type="file-explorer"]').append(row);
+  doc.querySelector('[data-type="file-explorer"]')!.append(row);
   ui.apply(settings, true);
   assert.equal(row.classList.contains("obstruct-hidden"), true);
 });
@@ -88,6 +82,7 @@ test("custom name is plain text, not HTML", () => {
   const { doc, ui } = fixture();
   ui.apply({ ...settings, displayName: "<img src=x>" }, true);
   assert.equal(doc.querySelector(".workspace-drawer-vault-name img"), null);
-  assert.equal(doc.querySelector(".workspace-drawer-vault-name").textContent, "<img src=x>");
+  assert.equal(doc.querySelector(".workspace-drawer-vault-name")!.textContent, "<img src=x>");
 });
 console.log(passed + " checks passed.");
+

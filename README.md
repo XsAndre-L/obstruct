@@ -28,8 +28,8 @@ A nested folder such as notes/project is supported; its ancestors remain visible
 
 ## Install
 
-1. Build this repository with Node.js 22.22.2+, 24.15+ or 26+:
-   `npm ci`, then `npm run build`.
+1. Build this repository with Bun 1.4.3 or newer:
+   `bun install --frozen-lockfile`, then `bun run build`.
 2. Create `<vault>/.obsidian/plugins/obsidian-sample-plugin/`.
 3. Copy `main.js`, `manifest.json` and `styles.css` into it.
 4. Reload Obsidian. Enable **Obstruct** under **Settings → Community plugins**.
@@ -41,12 +41,12 @@ To update, disable Obstruct, replace the three release files, then enable it. Ke
 
 ## Development
 
-- `npm run dev`: rebuild when source changes.
-- `npm run build`: TypeScript validation and production bundle.
-- `npm test`: path validation, migration, DOM filtering and restoration checks.
-- `npm run package`: build and copy the three installable files to dist/obsidian-sample-plugin.
+- `bun run dev`: rebuild when source changes.
+- `bun run build`: TypeScript validation and production bundle.
+- `bun run test`: path validation, migration, DOM filtering and restoration checks.
+- `bun run package`: build and copy the three installable files to dist/obsidian-sample-plugin.
 
-Dependencies are pinned in package-lock.json. The old sample commands, logging, and placeholder components have been removed.
+Use Bun exclusively for installs and scripts. All authored scripts are TypeScript under scripts/ and run directly with Bun. Bun also produces the CommonJS main.js required by Obsidian. Dependencies are pinned in bun.lock; do not generate npm or Yarn lockfiles. The old sample commands, logging, and placeholder components have been removed.
 
 ## Manual acceptance checks
 

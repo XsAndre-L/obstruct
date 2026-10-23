@@ -4,19 +4,22 @@
   "description": "Reusable vault names and focused folder views for Obsidian.",
   "main": "main.js",
   "scripts": {
-    "dev": "node esbuild.config.mjs",
-    "build": "tsc --noEmit --skipLibCheck && node esbuild.config.mjs production",
-    "test": "node scripts/test.mjs",
-    "version": "node version-bump.mjs && git add manifest.json versions.json",
-    "package": "npm run build && node scripts/package.mjs"
+    "dev": "bun --watch scripts/build.ts",
+    "typecheck": "bun scripts/typecheck.ts",
+    "build": "bun scripts/build.ts --production",
+    "test": "bun scripts/test.ts",
+    "version": "bun scripts/version.ts",
+    "package": "bun scripts/package.ts"
   },
   "author": "Andre Loubser",
   "license": "MIT",
   "devDependencies": {
+    "@types/bun": "1.4.4",
+    "@types/jsdom": "30.0.0",
     "@types/node": "26.6.5",
-    "esbuild": "0.28.2",
     "jsdom": "30.1.3",
     "obsidian": "1.14.4",
     "typescript": "7.0.2"
-  }
+  },
+  "packageManager": "bun@1.4.3"
 }

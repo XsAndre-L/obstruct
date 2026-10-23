@@ -1,16 +1,22 @@
 {
   "compilerOptions": {
     "module": "ESNext",
-    "target": "ES2018",
+    "target": "ESNext",
     "moduleResolution": "bundler",
     "strict": true,
     "skipLibCheck": true,
     "lib": [
       "DOM",
       "ES2018"
+    ],
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "types": [
+      "bun"
     ]
   },
   "include": [
-    "src/**/*.ts"
+    "src/**/*.ts",
+    "scripts/**/*.ts"
   ]
 }
