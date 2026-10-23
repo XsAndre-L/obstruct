@@ -244,4 +244,49 @@ await test("packaged resource dialog, ordering, Undo and safe external preview",
     assert.match(leaf.view.contentEl.textContent,/disabled, removed/);
   } finally { ui.dispose();await fs.rm(temp,{recursive:true,force:true}); }
 });
+await test("Show more exists only while entries remain in the workspace and picker", async () => {
+  const bundle = await fs.readFile(new URL("../main.js", import.meta.url), "utf8");
+  const waitFor = async (check: () => boolean) => {
+    for (let i = 0; i < 100; i++) {
+      if (check()) return;
+      await new Promise(resolve => setTimeout(resolve, 20));
+    }
+    assert.fail("UI did not settle");
+  };
+  for (const size of [0, 1, 200, 201]) {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "obstruct-pagination-"));
+    await Promise.all(Array.from({length:size}, (_, i) => fs.writeFile(path.join(root, i + ".md"), "")));
+    const ui = harness(root);
+    try {
+      await ui.load(bundle); ui.ready();
+      await waitFor(() => !!ui.doc.querySelector(".obstruct-workspace details"));
+      const workspace = ui.doc.querySelector<HTMLElement>(".obstruct-workspace")!;
+      const details = workspace.querySelector("details")!;
+      details.open = true;
+      await waitFor(() => size === 0
+        ? workspace.textContent!.includes("No visible entries.")
+        : workspace.querySelectorAll(".obstruct-file").length === Math.min(size,200));
+      const more = (parent: Element) => Array.from(parent.querySelectorAll("button")).find(b => b.textContent === "Show more");
+      assert.equal(!!more(workspace), size > 200, "workspace size " + size);
+      if (size > 200) {
+        more(workspace)!.click();
+        await waitFor(() => !more(workspace));
+        assert.equal(workspace.querySelectorAll(".obstruct-file").length, size);
+      }
+      ui.tabs[0].display();
+      Array.from((ui.tabs[0].containerEl as HTMLElement).querySelectorAll("button")).find(b => b.textContent === "Browse")!.click();
+      await waitFor(() => !!ui.doc.querySelector(".obstruct-picker-list"));
+      const picker = ui.doc.querySelector(".obstruct-picker-list")!.parentElement!;
+      await waitFor(() => picker.textContent!.includes(size + " entries"));
+      assert.equal(!!more(picker), size > 200, "picker size " + size);
+      if (size > 200) {
+        more(picker)!.click();
+        await waitFor(() => !more(picker));
+        assert.equal(picker.querySelector(".obstruct-picker-list")!.children.length, size);
+      }
+      Array.from(picker.querySelectorAll("button")).find(b => b.textContent === "Cancel")!.click();
+      await new Promise(resolve => setTimeout(resolve, 0));
+    } finally { ui.dispose(); await fs.rm(root, {recursive:true, force:true}); }
+  }
+});
 console.log(count + " checks passed.");

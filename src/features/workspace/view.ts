@@ -74,7 +74,8 @@ export class WorkspaceView extends ItemView {
               else if (entry.kind === "link") status(content, entry.name + " · Linked entry skipped");
               else button(content, entry.name, () => this.openFile(entry.absolute)).addClass("obstruct-file");
             }
-            offset += 200; more.hidden = offset >= entries.length; content.appendChild(more);
+            offset += 200;
+            if (offset < entries.length) content.appendChild(more); else more.remove();
           }; draw();
         } catch(e) {
           if (epoch !== this.epoch || generation !== id) return;

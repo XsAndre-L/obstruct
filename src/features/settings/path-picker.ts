@@ -41,7 +41,8 @@ export class PathPicker extends Modal {
           action.disabled = entry.kind === "link" || (this.foldersOnly && entry.kind !== "folder");
           if (entry.kind === "link") row.createSpan({ text: " — linked entry skipped" });
         }
-        offset += 200; more.hidden = offset >= entries.length;
+        offset += 200;
+        if (offset >= entries.length) { more.remove(); pagination.remove(); }
       }; draw();
     } catch (e) { if (epoch === this.epoch) feedback.setText(message(e)); }
   }
