@@ -17,13 +17,17 @@ export class WorkspaceView extends ItemView {
   render(): void {
     const epoch = ++this.epoch; const el = this.contentEl; el.empty(); el.addClass("obstruct-workspace");
     el.createEl("h3", { text: this.getDisplayText() });
-    button(el, "Settings", this.openSettings); button(el, "Recheck all", () => this.render());
+    el.createEl("p", { cls: "obstruct-workspace-intro", text: "Browse your Notes folder and added Resources. Expand a folder, then select a file to open it." });
+    const toolbar = el.createDiv({ cls: "obstruct-toolbar" });
+    button(toolbar, "Settings", this.openSettings).title = "Choose your notes folder, resources and ignore rules";
+    button(toolbar, "Recheck all", () => this.render()).title = "Check folder availability and refresh the tree";
+    el.createEl("p", { cls: "obstruct-workspace-help", text: "Vault files open in Obsidian. Supported files outside the vault open in a read-only preview." });
     if (!this.config.active.enabled) { status(el, "Obstruct workspace is disabled. The native file explorer is unchanged."); return; }
     try {
       const roots = this.service.roots(this.config.active);
       void this.root(el, roots[0], epoch);
       el.createEl("h4", { text: "Resources" });
-      if (roots.length === 1) status(el, "Add resources in Obstruct settings.");
+      if (roots.length === 1) status(el, "No extra resources yet. Use Settings to add files or folders alongside your notes.");
       for (const root of roots.slice(1)) void this.root(el, root, epoch);
     } catch(e) { status(el, message(e)); button(el, "Review settings", this.openSettings); }
   }

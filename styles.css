@@ -290,3 +290,18 @@
   text-align: left;
 }
 .modal .modal-content.obstruct-dialog .setting-item { padding: var(--obstruct-card-padding); }
+
+
+/* Workspace browser: explanatory header and consistently spaced actions. */
+.obstruct-workspace { padding: 16px; }
+.obstruct-workspace > h3 { margin: 0 0 12px; font-size: 18px; line-height: 1.35; }
+.obstruct-workspace > h4 { margin: 24px 0 12px; font-size: var(--font-ui-medium); }
+.obstruct-workspace-intro,
+.obstruct-workspace-help { margin: 0 0 12px; line-height: 1.5; }
+.obstruct-workspace-intro { font-size: var(--font-ui-small); }
+.obstruct-workspace-help { font-size: var(--font-ui-smaller); color: var(--text-muted); }
+.obstruct-workspace .obstruct-toolbar { margin: 12px 0 16px; }
+.obstruct-workspace .obstruct-toolbar button { margin: 0; }
+.obstruct-workspace .obstruct-root { margin: 16px 0; }
+.obstruct-workspace .obstruct-status { margin: 8px 0; }
+.obstruct-workspace .obstruct-children > button:not(.obstruct-file) { margin-top: 8px; }
