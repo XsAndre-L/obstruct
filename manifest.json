@@ -1,10 +1,10 @@
 {
-	"id": "obsidian-sample-plugin",
-	"name": "Obstruct",
-	"version": "1.0.0",
-	"minAppVersion": "0.15.0",
-	"description": "This is a sample plugin for Obsidian. This plugin demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Andre Loubser",
-	"authorUrl": "https://obsidian.md",
-	"isDesktopOnly": false
+  "id": "obsidian-sample-plugin",
+  "name": "Obstruct",
+  "version": "1.1.0",
+  "minAppVersion": "1.0.0",
+  "description": "A reusable vault display name and focused folder view for project documentation.",
+  "author": "Andre Loubser",
+  "authorUrl": "https://github.com/XsAndre-L",
+  "isDesktopOnly": true
 }
