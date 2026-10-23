@@ -1,73 +1,67 @@
-# Obsidian Sample Plugin
+# Obstruct
 
-This is a sample plugin for Obsidian (https://obsidian.md).
+Give an Obsidian vault a reusable display name and focus its file explorer on one folder without moving or renaming files.
 
-This project uses Typescript to provide type checking and documentation.
-The repo depends on the latest plugin API (obsidian.d.ts) in Typescript Definition format, which contains TSDoc comments describing what it does.
+## Example: WebAppStack
 
-**Note:** The Obsidian API is still in early alpha and is subject to change at any time!
+Open the **WebAppStack repository folder** as the vault. Under **Settings → Obstruct**, set:
 
-This sample plugin demonstrates some of the basic functionality the plugin API can do.
-- Changes the default font color to red using `styles.css`.
-- Adds a ribbon icon, which shows a Notice when clicked.
-- Adds a command "Open Sample Modal" which opens a Modal.
-- Adds a plugin setting tab to the settings page.
-- Registers a global click event and output 'click' to the console.
-- Registers a global interval which logs 'setInterval' to the console.
+| Setting | Value |
+| --- | --- |
+| Enable focus | On |
+| Display name | WebAppStack |
+| Visible folder | docs |
 
-## First time developing plugins?
+Click **Apply**. The main window's vault labels use the display name, and the file explorer shows the docs folder and its contents. For another project, use its own name and folder. Settings are stored separately in each vault.
 
-Quick starting guide for new plugin devs:
+A nested folder such as notes/project is supported; its ancestors remain visible so the tree remains navigable. Blank display name uses the real vault name. Blank visible folder shows all files. A missing folder fails open, restoring the full explorer. The command **Obstruct: Toggle folder focus** temporarily restores the normal name and explorer.
 
-- Check if [someone already developed a plugin for what you want](https://obsidian.md/plugins)! There might be an existing plugin similar enough that you can partner up with.
-- Make a copy of this repo as a template with the "Use this template" button (login to GitHub if you don't see it).
-- Clone your repo to a local development folder. For convenience, you can place this folder in your `.obsidian/plugins/your-plugin-name` folder.
-- Install NodeJS, then run `npm i` in the command line under your repo folder.
-- Run `npm run dev` to compile your plugin from `main.ts` to `main.js`.
-- Make changes to `main.ts` (or create new `.ts` files). Those changes should be automatically compiled into `main.js`.
-- Reload Obsidian to load the new version of your plugin.
-- Enable plugin in settings window.
-- For updates to the Obsidian API run `npm update` in the command line under your repo folder.
+## Scope and limitations
 
-## Releasing new releases
+- This is a **presentation filter**, not a smaller vault or an access boundary.
+- Search, graph, backlinks, quick switcher and indexing still cover the full vault. Existing links can open files outside the visible folder.
+- Core new-note and attachment locations are not changed. Set them to docs and docs/assets under **Settings → Files and links** if desired.
+- Repository dependency and generated folders remain within the vault's scope; this plugin does not reduce indexing cost.
+- Names are changed in supported main-window labels and title formats, not on disk or in the vault registry. The global Manage Vaults dialog, other vaults, Obsidian URIs and detached windows keep their original identities.
+- Desktop only. Presentation uses Obsidian DOM selectors because there is no public API for these UI customizations. Future Obsidian versions or themes may need selector updates.
+- Disabling or unloading Obstruct restores its own changes. It never deletes, moves or renames notes, and it does not rewrite core settings.
 
-- Update your `manifest.json` with your new version number, such as `1.0.1`, and the minimum Obsidian version required for your latest release.
-- Update your `versions.json` file with `"new-plugin-version": "minimum-obsidian-version"` so older versions of Obsidian can download an older version of your plugin that's compatible.
-- Create new GitHub release using your new version number as the "Tag version". Use the exact version number, don't include a prefix `v`. See here for an example: https://github.com/obsidianmd/obsidian-sample-plugin/releases
-- Upload the files `manifest.json`, `main.js`, `styles.css` as binary attachments. Note: The manifest.json file must be in two places, first the root path of your repository and also in the release.
-- Publish the release.
+## Install
 
-> You can simplify the version bump process by running `npm version patch`, `npm version minor` or `npm version major` after updating `minAppVersion` manually in `manifest.json`.
-> The command will bump version in `manifest.json` and `package.json`, and add the entry for the new version to `versions.json`
+1. Build this repository with Node.js 22.22.2+, 24.15+ or 26+:
+   `npm ci`, then `npm run build`.
+2. Create `<vault>/.obsidian/plugins/obsidian-sample-plugin/`.
+3. Copy `main.js`, `manifest.json` and `styles.css` into it.
+4. Reload Obsidian. Enable **Obstruct** under **Settings → Community plugins**.
+5. Open **Settings → Obstruct**, enter your name and folder, then click **Apply**.
 
-## Adding your plugin to the community plugin list
+The historical plugin ID **obsidian-sample-plugin** is deliberately retained so existing Obstruct installations and settings remain associated with the update. Do not install it alongside the original Obsidian sample plugin, which shares that ID.
 
-- Check https://github.com/obsidianmd/obsidian-releases/blob/master/plugin-review.md
-- Publish an initial version.
-- Make sure you have a `README.md` file in the root of your repo.
-- Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
+To update, disable Obstruct, replace the three release files, then enable it. Keep your existing data.json. Old sample settings migrate to safe defaults with no folder filtering.
 
-## How to use
+## Development
 
-- Clone this repo.
-- `npm i` or `yarn` to install dependencies
-- `npm run dev` to start compilation in watch mode.
+- `npm run dev`: rebuild when source changes.
+- `npm run build`: TypeScript validation and production bundle.
+- `npm test`: path validation, migration, DOM filtering and restoration checks.
+- `npm run package`: build and copy the three installable files to dist/obsidian-sample-plugin.
 
-## Manually installing the plugin
+Dependencies are pinned in package-lock.json. The old sample commands, logging, and placeholder components have been removed.
 
-- Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
+## Manual acceptance checks
 
-## Improve code quality with eslint (optional)
-- [ESLint](https://eslint.org/) is a tool that analyzes your code to quickly find problems. You can run ESLint against your plugin to find common bugs and ways to improve your code. 
-- To use eslint with this project, make sure to install eslint from terminal:
-  - `npm install -g eslint`
-- To use eslint to analyze this project use this command:
-  - `eslint main.ts`
-  - eslint will then create a report with suggestions for code improvement by file and line number.
-- If your source code is in a folder, such as `src`, you can use eslint with this command to analyze all files in that folder:
-  - `eslint .\src\`
+The automated DOM checks do not replace a live Obsidian check. In a disposable repository vault:
 
+1. Include docs, docs-old, backend, a root README, and docs/README.md.
+2. Set a custom display name and docs. Confirm only docs is shown in the explorer, including after collapsing/reopening it.
+3. Open a note and switch tabs. Confirm the title remains correct.
+4. Create, rename and delete sibling folders. Confirm new siblings stay hidden.
+5. Try a nested folder. Confirm its ancestors remain visible.
+6. Rename or delete the focused folder externally. Confirm the explorer fails open.
+7. Disable/re-enable the plugin and restart Obsidian. Confirm restoration and saved settings.
+8. Confirm core search can still find an outside note; focus intentionally does not block it.
 
-## API Documentation
+## API references
 
-See https://github.com/obsidianmd/obsidian-api
+- [Obsidian API](https://github.com/obsidianmd/obsidian-api)
+- [Obsidian files and links settings](https://obsidian.md/help/settings)

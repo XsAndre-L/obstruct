@@ -1,82 +1,101 @@
-import { App, Editor, MarkdownView, Plugin, PluginManifest } from "obsidian";
-import { SettingsTab } from "./menus/settings-tab";
-import { PluginSettings } from "./menus/plugin-settings";
-import { ObstructSideBar } from "./menus/side-bar";
-import { ObsModalMenu } from "./menus/obstruct-modal-menu";
+import { Notice, Plugin, PluginSettingTab, Setting, TFolder } from "obsidian";
+import { FocusSettings, normalizeFolder, readSettings } from "./focus-settings";
+import { FocusPresentation } from "./focus-presentation";
 
-// Remember to rename these classes and interfaces!
+export default class Obstruct extends Plugin {
+  settings: FocusSettings = readSettings(null);
+  private presentation: FocusPresentation | null = null;
+  private observer: MutationObserver | null = null;
+  private frame: number | null = null;
+  private stopped = false;
 
-export default class MyPlugin extends Plugin {
-	settings: PluginSettings;
+  async onload(): Promise<void> {
+    this.settings = readSettings(await this.loadData());
+    this.addSettingTab(new ObstructSettings(this));
+    this.addCommand({
+      id: "toggle-folder-focus", name: "Toggle folder focus",
+      callback: async () => {
+        const previous = this.settings.enabled;
+        this.settings.enabled = !previous;
+        try {
+          await this.saveData(this.settings);
+          this.refresh();
+          new Notice(this.settings.enabled ? "Obstruct focus enabled" : "Obstruct focus disabled");
+        } catch {
+          this.settings.enabled = previous;
+          new Notice("Obstruct could not save settings. Focus was not changed.");
+        }
+      },
+    });
+    this.app.workspace.onLayoutReady(() => {
+      if (this.stopped) return;
+      this.presentation = new FocusPresentation(document, this.app.vault.getName());
+      this.observer = new MutationObserver(() => this.schedule());
+      this.refresh();
+    });
+    this.registerEvent(this.app.workspace.on("layout-change", () => this.schedule()));
+    this.registerEvent(this.app.workspace.on("file-open", () => this.schedule()));
+    this.registerEvent(this.app.vault.on("create", () => this.schedule()));
+    this.registerEvent(this.app.vault.on("delete", () => this.schedule()));
+    this.registerEvent(this.app.vault.on("rename", () => this.schedule()));
+  }
 
-	constructor(app: App, manifest: PluginManifest) {
-		super(app, manifest);
-		this.settings = new PluginSettings(app, manifest);
-	}
+  private schedule(): void {
+    if (this.stopped || this.frame !== null) return;
+    this.frame = window.requestAnimationFrame(() => {
+      this.frame = null;
+      this.refresh();
+    });
+  }
 
-	async onload() {
-		await this.settings.loadSettings();
+  refresh(): void {
+    if (this.stopped || !this.presentation) return;
+    this.observer?.disconnect();
+    const folder = this.app.vault.getAbstractFileByPath(this.settings.visibleFolder);
+    this.presentation.apply(this.settings, folder instanceof TFolder);
+    this.observer?.observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ["data-path"] });
+    const title = document.querySelector("title");
+    if (title) this.observer?.observe(title, { childList: true, subtree: true, characterData: true });
+  }
 
-		const sidbar = new ObstructSideBar(app, this.manifest);
-		sidbar.addRibbon();
+  onunload(): void {
+    this.stopped = true;
+    this.observer?.disconnect();
+    if (this.frame !== null) window.cancelAnimationFrame(this.frame);
+    this.presentation?.dispose();
+  }
+}
 
-		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
-		const statusBarItemEl = this.addStatusBarItem();
-		statusBarItemEl.setText("Status Bar Text");
+class ObstructSettings extends PluginSettingTab {
+  constructor(private plugin: Obstruct) { super(plugin.app, plugin); }
 
-		// This adds a simple command that can be triggered anywhere
-		this.addCommand({
-			id: "open-sample-modal-simple",
-			name: "Open sample modal (simple)",
-			callback: () => {
-				new ObsModalMenu(this.app, "cool").open();
-			},
-		});
-		// This adds an editor command that can perform some operation on the current editor instance
-		this.addCommand({
-			id: "sample-editor-command",
-			name: "Sample editor command",
-			editorCallback: (editor: Editor, view: MarkdownView) => {
-				console.log(editor.getSelection());
-				editor.replaceSelection("Sample Editor Command");
-			},
-		});
-		// This adds a complex command that can check whether the current state of the app allows execution of the command
-		this.addCommand({
-			id: "open-sample-modal-complex",
-			name: "Open sample modal (complex)",
-			checkCallback: (checking: boolean) => {
-				// Conditions to check
-				const markdownView =
-					this.app.workspace.getActiveViewOfType(MarkdownView);
-				if (markdownView) {
-					// If checking is true, we're simply "checking" if the command can be run.
-					// If checking is false, then we want to actually perform the operation.
-					if (!checking) {
-						new ObsModalMenu(this.app, "Menu").open();
-					}
-
-					// This command will only show up in Command Palette when the check function returns true
-					return true;
-				}
-			},
-		});
-
-		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new SettingsTab(this.app, this.settings));
-
-		// EVENTS
-		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
-		// Using this function will automatically remove the event listener when this plugin is disabled.
-		this.registerDomEvent(document, "click", (evt: MouseEvent) => {
-			console.log("click", evt);
-		});
-
-		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-		this.registerInterval(
-			window.setInterval(() => console.log("setInterval"), 5 * 60 * 1000)
-		);
-	}
-
-	onunload() {}
+  display(): void {
+    const el = this.containerEl;
+    el.empty();
+    el.createEl("h2", { text: "Obstruct" });
+    el.createEl("p", { text: "Give this vault a display name and focus its file explorer on one folder. Files remain in place. Search, graph, links and indexing still cover the full vault." });
+    let name = this.plugin.settings.displayName;
+    let folder = this.plugin.settings.visibleFolder;
+    let enabled = this.plugin.settings.enabled;
+    new Setting(el).setName("Enable focus").setDesc("Turn off to restore the normal name and file explorer.").addToggle(toggle => toggle.setValue(enabled).onChange(value => { enabled = value; }));
+    new Setting(el).setName("Display name").setDesc("Shown in the main window title and vault labels. Blank uses the real folder name.").addText(text => text.setPlaceholder("WebAppStack").setValue(name).onChange(value => { name = value; }));
+    new Setting(el).setName("Visible folder").setDesc("Vault-relative path, such as docs or notes/project. Blank shows everything.").addText(text => text.setPlaceholder("docs").setValue(folder).onChange(value => { folder = value; }));
+    const feedback = el.createEl("p", { attr: { role: "status", "aria-live": "polite" } });
+    new Setting(el).addButton(button => button.setButtonText("Apply").setCta().onClick(async () => {
+      try {
+        const path = normalizeFolder(folder);
+        if (enabled && path && !(this.app.vault.getAbstractFileByPath(path) instanceof TFolder)) {
+          throw new Error("That folder does not exist in this vault. Create it first or choose another folder.");
+        }
+        const previous = this.plugin.settings;
+        this.plugin.settings = { displayName: name.trim(), visibleFolder: path, enabled };
+        try { await this.plugin.saveData(this.plugin.settings); }
+        catch (error) { this.plugin.settings = previous; throw error; }
+        this.plugin.refresh();
+        feedback.setText("Saved for this vault.");
+      } catch (error) {
+        feedback.setText(error instanceof Error ? error.message : "Could not save settings.");
+      }
+    }));
+  }
 }
