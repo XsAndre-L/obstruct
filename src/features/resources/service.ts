@@ -91,6 +91,11 @@ export class ResourceService {
     });
   }
   async validate(config: WorkspaceConfig): Promise<void> {
+    if (config.graph.enabled) {
+      const graphRoot = resolveNotes(this.vaultRoot, config.graph.notesPath || config.mainNotesPath);
+      const state = await this.inspect(graphRoot);
+      if (state.status !== "Available" || state.kind !== "folder") throw new Error("Graph: choose an existing notes folder.");
+    }
     config.ignore.forEach(validatePattern);
     const roots = this.roots(config);
     const ids = new Set<string>(); const seen = new Set<string>();

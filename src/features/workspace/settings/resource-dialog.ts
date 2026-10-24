@@ -1,9 +1,9 @@
 import { App, Modal, Setting } from "obsidian";
-import { clone, ResourceConfig } from "../../shared/config/model";
-import { ResourceService } from "../resources/service";
-import { lines, validatePattern } from "../../shared/filtering/ignore";
-import { resolveResource, storedPath, within } from "../../shared/paths/resolver";
-import { button, message, status } from "../../shared/ui/elements";
+import { clone, ResourceConfig } from "../../../shared/config/model";
+import { ResourceService } from "../../resources/service";
+import { lines, validatePattern } from "../../../shared/filtering/ignore";
+import { resolveResource, storedPath, within } from "../../../shared/paths/resolver";
+import { button, message, status } from "../../../shared/ui/elements";
 import { PathPicker } from "./path-picker";
 export class ResourceDialog extends Modal {
   private editing: boolean;
@@ -38,7 +38,7 @@ export class ResourceDialog extends Modal {
     const detail = el.createEl("details"); detail.createEl("summary", { text: "Resource ignore rules" });
     const textarea = detail.createEl("textarea", { attr: { "aria-label": "Resource ignore rules", rows: "5" } });
     textarea.value = this.resource.ignore.join("\n"); textarea.addEventListener("input", () => { this.resource.ignore = lines(textarea.value); });
-    el.createEl("p", { text: "Missing resources can be saved and retried later. Adding this entry changes the draft; Apply changes saves the workspace." });
+    el.createEl("p", { text: "Missing resources can be saved and retried later." });
     const actions = el.createDiv({ cls: "obstruct-toolbar obstruct-dialog-actions" });
     button(actions, "Cancel", () => this.close());
     button(actions, "Save to draft", async () => {

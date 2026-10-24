@@ -1,3 +1,4 @@
+import { applyFilter, folderFilter, removeFilter } from "../src/features/graph/search";
 import { ExplorerFilter } from "../src/features/explorer-filter/presentation";
 import { explorerVisible } from "../src/features/explorer-filter/visibility";
 import { harness } from "./test-support/obsidian";
@@ -178,8 +179,19 @@ await test("packaged plugin settings, drafts, keyboard tabs and cleanup", async 
     assert.equal(ui.doc.querySelector(".workspace-drawer-vault-name")?.textContent, "Workspace");
     const settings = ui.tabs[0]; settings.display(); await pause();
     const buttons = (name: string) => Array.from(ui.doc.querySelectorAll("button")).find(b => b.textContent === name)!;
+    assert.equal(ui.doc.querySelector(".obstruct-settings h2")?.textContent, "Obstruct");
+    assert.equal(ui.doc.querySelector('.obstruct-primary-tabs [role="tab"]')?.textContent, "Workspace");
+    assert.ok(ui.doc.querySelector('#obstruct-primary-panel .obstruct-workspace-subtabs'));
+    assert.deepEqual(Array.from(ui.doc.querySelectorAll('.obstruct-workspace-subtabs [role="tab"]')).map(t => t.textContent), ["General", "Resources", "Ignore rules"]);
     const name = ui.doc.querySelector<HTMLInputElement>('input[placeholder="Display name"]')!;
     name.value = "Draft title"; name.dispatchEvent(new ui.dom.window.Event("input"));
+    for (const target of ["Resources", "Ignore rules", "General"]) {
+      buttons(target).click();
+      assert.equal(ui.doc.querySelectorAll(".obstruct-actions").length, 1);
+      assert.equal(ui.doc.querySelector(".obstruct-settings-content .obstruct-actions"), null);
+      assert.equal((ui.getData() as any).displayName, "Workspace");
+    }
+    assert.equal(ui.doc.querySelector<HTMLInputElement>('input[placeholder="Display name"]')!.value, "Draft title");
     settings.hide(); settings.display(); await pause();
     assert.equal(ui.doc.querySelector<HTMLInputElement>('input[placeholder="Display name"]')!.value, "Draft title");
     assert.equal((ui.getData() as any).displayName, "Workspace");
@@ -191,7 +203,7 @@ await test("packaged plugin settings, drafts, keyboard tabs and cleanup", async 
     buttons("Apply changes").click(); await pause();
     assert.equal((ui.getData() as any).displayName, "Applied title");
     assert.equal(ui.leaves.length, 1);
-    const tab = ui.doc.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]')!;
+    const tab = ui.doc.querySelector<HTMLElement>('.obstruct-workspace-subtabs [role="tab"][aria-selected="true"]')!;
     tab.dispatchEvent(new ui.dom.window.KeyboardEvent("keydown", {key:"ArrowRight",bubbles:true}));
     assert.equal(ui.doc.activeElement?.textContent, "Resources");
     buttons("Add resource").click();
@@ -326,4 +338,82 @@ await test("native explorer filtering refreshes inserted rows and restores on un
   assert.equal(doc.querySelectorAll(".obstruct-explorer-hidden").length,0);
   dom.window.close();
 });
+
+await test("graph search keeps OR expressions, folder boundaries and user edits", () => {
+  const filter = folderFilter(["docs/alpha"]);
+  assert.equal(filter, '-path:"docs/alpha/"');
+  const base = 'tag:#work OR path:"other"';
+  assert.equal(applyFilter(base, filter), '(' + base + ') ' + filter);
+  assert.equal(removeFilter(applyFilter(base, filter), base, filter), base);
+  assert.equal(removeFilter('tag:#new ' + filter, base, filter), 'tag:#new');
+  assert.equal(removeFilter('tag:#manual', base, filter), 'tag:#manual');
+});
+await test("graph commands merge pending edits and preserve failure state", async () => {
+  const config = new ConfigController(null, async () => {}, async () => {});
+  config.edit(d => { d.displayName = "Pending"; d.graph.folderLabels["docs/a"] = "Label"; });
+  await config.updateGraph(g => { g.hiddenFolderPaths = ["docs/a"]; });
+  assert.equal(config.draft.displayName, "Pending");
+  assert.equal(config.active.displayName, "");
+  assert.equal(config.draft.graph.folderLabels["docs/a"], "Label");
+  assert.deepEqual(config.active.graph.hiddenFolderPaths, ["docs/a"]);
+  const fail = new ConfigController(null, async () => { throw Error("disk"); }, async () => {});
+  await assert.rejects(fail.updateGraph(g => { g.enabled = true; }));
+  assert.equal(fail.active.graph.enabled, false);
+  assert.equal(fail.draft.graph.enabled, false);
+});
+await test("Graph tab shares draft and filters both graph views with unload restoration", async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "obstruct-graph-"));
+  await fs.mkdir(path.join(root, "docs", "alpha"), { recursive: true });
+  const ui = harness(root);
+  const pause = () => new Promise(resolve => setTimeout(resolve, 400));
+  const engines: any[] = [];
+  try {
+    ui.setData({ enabled: false, mainNotesPath: "docs", graph: { enabled: false } });
+    ui.app.vault.getAbstractFileByPath = (p: string) => p === "docs" ? { children: [{ path: "docs/alpha", name: "alpha", children: [] }] } : null;
+    for (const type of ["graph", "localgraph"]) {
+      const container = ui.doc.createElement("section");
+      container.innerHTML = '<div class="graph-control-section mod-filter"><div class="tree-item-children"></div></div>';
+      ui.doc.body.append(container);
+      const engine = { options: { search: type === "graph" ? "tag:#work OR tag:#home" : "tag:#local" }, updateSearch() {} };
+      engines.push(engine); ui.leaves.push({ type, view: { containerEl: container, engine } });
+    }
+    await ui.load(await fs.readFile(new URL("../main.js", import.meta.url), "utf8"));
+    ui.ready(); ui.tabs[0].display(); await pause();
+    const click = async (text: string) => { Array.from(ui.tabs[0].containerEl.querySelectorAll("button") as NodeListOf<HTMLButtonElement>).find(b => b.textContent === text)!.click(); await Promise.resolve(); };
+    await click("Graph");
+    assert.equal(ui.doc.querySelectorAll(".obstruct-graph-folders").length, 1);
+    assert.equal(ui.doc.querySelectorAll(".obstruct-graph-folders .obstruct-resource").length, 0);
+    const added = {path:"docs/beta",name:"beta",children:[]};
+    const originalLookup = ui.app.vault.getAbstractFileByPath;
+    ui.app.vault.getAbstractFileByPath = (p:string) => p === "docs" ? {children:[...originalLookup(p).children,added]} : null;
+    ui.app.vault.trigger("create", added); await pause();
+    assert.ok(ui.doc.querySelector('[aria-label="Graph label for docs/beta"]'));
+    ui.app.vault.getAbstractFileByPath = originalLookup;
+    ui.app.vault.trigger("delete", added); await pause();
+    assert.equal(ui.doc.querySelector('[aria-label="Graph label for docs/beta"]'), null);
+    const enabled = ui.tabs[0].containerEl.querySelector('input[type="checkbox"]') as HTMLInputElement;
+    enabled.checked = true; enabled.dispatchEvent(new ui.dom.window.Event("change"));
+    const label = ui.doc.querySelector<HTMLInputElement>('[aria-label="Graph label for docs/alpha"]')!;
+    assert.ok(label, ui.tabs[0].containerEl.textContent);
+    label.value = "Alpha notes"; label.dispatchEvent(new ui.dom.window.Event("input"));
+    await click("Hide all");
+    await click("Workspace"); await click("Graph");
+    assert.equal(ui.doc.querySelector<HTMLInputElement>('[aria-label="Graph label for docs/alpha"]')!.value, "Alpha notes");
+    assert.equal(ui.doc.querySelectorAll(".obstruct-actions").length, 1);
+    await pause(); await click("Apply changes"); await pause();
+    assert.equal(engines[0].options.search, '(tag:#work OR tag:#home) -path:"docs/alpha/"');
+    assert.equal(engines[1].options.search, '(tag:#local) -path:"docs/alpha/"');
+    assert.equal(ui.doc.querySelectorAll(".obstruct-graph-controls").length, 2);
+    assert.match(ui.doc.querySelector(".obstruct-graph-controls")!.textContent!, /Alpha notes/);
+    await click("Show all"); await pause(); await click("Apply changes"); await pause();
+    assert.equal(engines[0].options.search, "tag:#work OR tag:#home");
+    await click("Hide all"); await pause(); await click("Apply changes"); await pause();
+  } finally {
+    ui.dispose();
+    assert.equal(engines[0]?.options.search, "tag:#work OR tag:#home");
+    assert.equal(engines[1]?.options.search, "tag:#local");
+    await fs.rm(root, { recursive: true, force: true });
+  }
+});
+
 console.log(count + " checks passed.");

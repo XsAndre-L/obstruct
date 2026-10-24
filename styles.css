@@ -41,15 +41,51 @@
 .obstruct-tabs {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--size-4-4, 16px);
   border-bottom: 1px solid var(--background-modifier-border);
-  margin: 8px 0 24px;
-  padding-bottom: 12px;
+  margin: var(--size-4-6, 24px) 0;
+  padding-bottom: 0;
 }
 
-.obstruct-tabs [aria-selected="true"] {
-  background: var(--interactive-accent);
-  color: var(--text-on-accent);
+.obstruct-settings .obstruct-tabs button[role="tab"] {
+  appearance: none;
+  height: auto;
+  min-height: var(--input-height);
+  margin: 0;
+  padding: 8px 2px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: var(--font-ui-medium);
+  font-weight: 600;
+}
+
+.obstruct-settings .obstruct-tabs button[role="tab"]:hover {
+  background: transparent;
+  color: var(--text-normal);
+}
+
+.obstruct-settings .obstruct-tabs button[aria-selected="true"] {
+  border-bottom-color: var(--interactive-accent);
+  color: var(--text-normal);
+}
+
+.obstruct-settings .obstruct-tabs button[role="tab"]:focus-visible {
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: 3px;
+}
+
+.obstruct-settings .obstruct-workspace-subtabs button[role="tab"] {
+  font-size: var(--font-ui-small);
+  font-weight: 500;
+  padding-block: 6px;
+}
+
+.obstruct-settings .obstruct-workspace-subtabs button[aria-selected="true"] {
+  border-bottom-color: var(--text-muted);
 }
 
 .obstruct-actions {
@@ -69,6 +105,10 @@
   margin: 0;
 }
 
+/* The settings content already supplies the page inset. */
+.vertical-tab-content.obstruct-settings :is(h1, h2, h3, h4) {
+  padding-inline: 0;
+}
 /* Typography and section rhythm. */
 .obstruct-settings-content > h2,
 .obstruct-dialog-title {
@@ -97,11 +137,6 @@
 :is(.obstruct-settings, .obstruct-dialog) .obstruct-status {
   font-size: var(--font-ui-smaller);
   line-height: 1.5;
-}
-
-.obstruct-settings .obstruct-tabs button {
-  font-size: var(--font-ui-small);
-  font-weight: 600;
 }
 
 .obstruct-settings [role="tabpanel"] > p {
@@ -343,3 +378,4 @@
 }
 /* Native explorer exclusions must override theme display rules. */
 .obstruct-explorer-hidden { display: none !important; }
+

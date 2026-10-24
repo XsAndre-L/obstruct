@@ -19,9 +19,10 @@ export function harness(root: string) {
   proto.createSpan = function(this: HTMLElement, options?: Record<string, unknown>) { return (this as any).createEl("span",options); };
   const factories = new Map<string, any>(); const leaves: any[]=[]; const tabs: any[]=[]; const cleanup: (()=>void)[]=[];
   let ready = () => {}; let data: unknown = {displayName:"Workspace",mainNotesPath:".",resources:[],ignore:[]};
+  const vaultEvents = new Set<{name:string;callback:(...args:any[])=>void}>();
   const app: any = {
-    vault: { on:()=>({}), adapter: null, getName:()=>"docs", getAbstractFileByPath:()=>null },
-    workspace: {
+    vault: { on:(name:string,callback:(...args:any[])=>void)=>{const ref={name,callback};vaultEvents.add(ref);return ref;}, offref:(ref:any)=>vaultEvents.delete(ref), trigger:(name:string,...args:any[])=>{for(const ref of vaultEvents) if(ref.name===name) ref.callback(...args);}, adapter: null, getName:()=>"docs", getAbstractFileByPath:()=>null },
+    workspace: { on:()=>({}),
       onLayoutReady:(fn:()=>void)=>{ready=fn;}, getLeavesOfType:(type:string)=>leaves.filter(l=>l.type===type),
       getLeftLeaf:()=>leaf(), getLeaf:()=>leaf(), revealLeaf:async()=>{},
       detachLeavesOfType:(type:string)=>{for(const l of leaves.filter(l=>l.type===type)) void l.view?.onClose();},
@@ -60,13 +61,18 @@ export function harness(root: string) {
     addToggle(fn:(control:any)=>void){const input=doc.createElement("input");input.type="checkbox";this.el.append(input);const control:any={setValue:(v:boolean)=>{input.checked=v;return control;},onChange:(cb:any)=>{input.addEventListener("change",()=>cb(input.checked));return control;}};fn(control);return this;}
     addButton(fn:(control:any)=>void){const el=doc.createElement("button");this.el.append(el);const control:any={setButtonText:(v:string)=>{el.textContent=v;return control;},onClick:(cb:any)=>{el.addEventListener("click",cb);return control;}};fn(control);return this;}
   }
-  const obsidian={setIcon:(el:HTMLElement,icon:string)=>{el.setAttribute("data-icon",icon);},Plugin,FileSystemAdapter,PluginSettingTab,ItemView,Modal,Setting,Notice:class{},TFile:class{}};
+  class SettingGroup {
+    listEl: HTMLElement;
+    constructor(parent: HTMLElement) { this.listEl=doc.createElement("div"); this.listEl.className="setting-group"; parent.append(this.listEl); }
+    addClass(name: string) { this.listEl.classList.add(name); return this; }
+  }
+  const obsidian={SettingGroup,setIcon:(el:HTMLElement,icon:string)=>{el.setAttribute("data-icon",icon);},Plugin,FileSystemAdapter,PluginSettingTab,ItemView,Modal,Setting,Notice:class{},TFile:class{}};
   const realRequire=createRequire(import.meta.url); const module={exports:{} as any};
   const context=vm.createContext({module,exports:module.exports,require:(name:string)=>name==="obsidian"?obsidian:realRequire(name),
     window:dom.window,document:doc,navigator:dom.window.navigator,MutationObserver:dom.window.MutationObserver,
     console,process,Buffer,URL,TextDecoder,AbortController,fetch,crypto,Blob,setTimeout,clearTimeout,queueMicrotask});
   return {dom,doc,app,tabs,leaves,getData:()=>data,setData:(value:unknown)=>{data=value;},ready:()=>ready(),load:async(source:string)=>{
     vm.runInContext(source,context); const Constructor=module.exports.default??module.exports;
-    const plugin=new Constructor(app,{id:"obsidian-sample-plugin"});await plugin.onload();return plugin;
+    const plugin=new Constructor(app,{id:"obstruct"});await plugin.onload();return plugin;
   },dispose:()=>{for(const fn of cleanup.reverse()) fn();dom.window.close();}};
 }

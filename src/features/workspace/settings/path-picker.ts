@@ -1,8 +1,8 @@
 import { App, Modal } from "obsidian";
 import path from "node:path";
-import { ResourceService } from "../resources/service";
-import { button, message, status } from "../../shared/ui/elements";
-import { resolveResource } from "../../shared/paths/resolver";
+import { ResourceService } from "../../resources/service";
+import { button, message, status } from "../../../shared/ui/elements";
+import { resolveResource } from "../../../shared/paths/resolver";
 export class PathPicker extends Modal {
   private epoch = 0;
   constructor(app: App, private service: ResourceService, private current: string,

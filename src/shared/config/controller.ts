@@ -1,3 +1,4 @@
+import { GraphConfig } from "./graph";
 import { clone, migrate, WorkspaceConfig } from "./model";
 export type Change = "draft" | "busy" | "active" | "discard";
 export class ConfigController {
@@ -33,6 +34,18 @@ export class ConfigController {
       await this.persist(candidate);
       if (this.disposed) return;
       this.active = candidate; this.draft.enabled = candidate.enabled; this.emit("active");
+    } finally { this.busy = false; this.emit("busy"); }
+  }
+  async updateGraph(update: (graph: GraphConfig) => void): Promise<void> {
+    if (this.busy || this.disposed) throw new Error("Finish the current save first.");
+    this.busy = true; this.emit("busy");
+    const candidate = clone(this.active);
+    const pending = clone(this.draft.graph);
+    update(candidate.graph); update(pending);
+    try {
+      await this.persist(candidate);
+      if (this.disposed) return;
+      this.active = candidate; this.draft.graph = pending; this.emit("active");
     } finally { this.busy = false; this.emit("busy"); }
   }
   dispose(): void { this.disposed = true; this.listeners.clear(); this.draft = clone(this.active); }

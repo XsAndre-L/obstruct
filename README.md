@@ -15,13 +15,25 @@ All relative resource paths resolve from the actual vault root. Parent paths, ot
 
 Open **Settings → Obstruct**, or use **Obstruct: Open workspace settings**.
 
-- **Workspace:** enabled state, display name, actual vault path, main notes folder and preview.
+The top-level **Workspace** tab has one enable toggle and three nested subtabs:
+
+- **General:** display name, actual vault path, main notes folder and preview.
 - **Resources:** add files/folders, browse, label, enable, reorder, edit, remove/undo, and recheck availability.
 - **Ignore rules:** global exclusions, optional presets and a path tester with matching-rule explanations.
 
-Changes remain pending across tabs and settings closure. **Apply changes** validates and saves once; **Discard changes** restores the active configuration. Drafts do not survive plugin reload. Removing a resource never deletes files.
+One Apply/Discard footer stays below the scrolling settings content. Changes remain pending across subtabs and settings closure. **Apply changes** validates and saves once; **Discard changes** restores the active configuration. Drafts do not survive plugin reload. Removing a resource never deletes files.
 
 The toggle command changes active enabled state and the draft's enabled field together; other pending edits are retained.
+
+## Graph
+
+The top-level **Graph** tab brings in Modular Graph's immediate-subfolder visibility controls, custom folder labels, and Show all / Hide all / Refresh actions. Enable graph filters independently of Workspace. A blank Notes folder follows the workspace main notes path; an explicit vault-relative folder overrides it.
+
+Settings use the same Apply/Discard draft as Workspace. After Apply, toggles appear in the native global and local Graph filter panels. Those toggles and the corresponding commands save visibility immediately while preserving other pending settings edits. Folder creation, deletion, renaming, and graph layout changes refresh the controls.
+
+Each open graph retains its own existing search expression. Obstruct appends folder exclusions and removes its own filter group when disabled or unloaded. Folder labels are cosmetic. Graph filtering does not restrict indexing or external resource access. Workspace ignore rules are separate and are not automatically copied into Graph.
+
+The adapter in `src/features/graph/service.ts` uses private Obsidian graph engine and filter-panel interfaces; future Obsidian versions may require updates. The original Modular Graph JavaScript source was recovered from the Knowledge-Base vault; its installed copy remains unchanged. Graph filtering starts disabled for existing Obstruct installations.
 
 ## Sidebar and availability
 
@@ -67,12 +79,12 @@ Use Bun 1.4.3 or newer:
 
 1. bun install --frozen-lockfile
 2. bun run package
-3. Copy main.js, manifest.json and styles.css from dist/obsidian-sample-plugin into the actual vault's .obsidian/plugins/obsidian-sample-plugin folder.
+3. Copy main.js, manifest.json and styles.css from dist/obstruct into the actual vault's .obsidian/plugins/obstruct folder.
 4. Enable Obstruct under Community plugins, or reload it after an update.
 
 Keep data.json during upgrades. Older visibleFolder settings migrate to the main notes path; blank becomes a dot. Existing display name and enabled state are preserved.
 
-The historical plugin ID obsidian-sample-plugin is retained for compatibility; do not install the original sample plugin beside it.
+The plugin ID is obstruct. To migrate an older installation, close Obsidian, rename the vault plugin folder from obsidian-sample-plugin to obstruct, install the new build while preserving data.json, and replace the old ID in community-plugins.json. Update any plugin-prefixed hotkey IDs from obsidian-sample-plugin: to obstruct: before reopening Obsidian.
 
 ## Development
 
@@ -93,3 +105,7 @@ Feature modules live under src/features; configuration, paths, filtering and UI 
 Automated checks cover migration, save failures/concurrency, toggle/draft consistency, Windows paths, ignore semantics, bounded reads, missing/disabled resources, junctions, queue timeout/disposal, Markdown safety and display-name restoration. Packaged-plugin UI tests exercise draft persistence across settings closure, Apply/Discard, keyboard tabs, resource dialogs, ordering and Undo, remote-image placeholders, external-link boundaries and preview revocation. A live walkthrough must additionally cover settings dialogs, sidebar navigation, previews, keyboard focus, themes and reload/unload before deployment.
 
 While enabled, Obstruct hides native explorer entries outside Notes and enabled internal resources, entries matched by workspace ignore rules, and entries excluded through Obsidian Files and links settings. Parent folders needed to reach an enabled root stay visible. Disabling or unloading Obstruct restores explorer rows. This is a visual filter, not an indexing boundary. External resources remain in the Obstruct sidebar. Native explorer markup and the excluded-files lookup are Obsidian integration points that may require maintenance after app updates.
+
+### Settings code ownership
+
+`src/features/settings/settings-tab.ts` is the Obsidian entry point. Workspace sections and resource dialogs live in `src/features/workspace/settings/`; the shared draft action bar lives in `src/features/settings/components/`. All sections edit the same configuration controller and reuse the existing path, resource-access and ignore services.
