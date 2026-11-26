@@ -5,11 +5,11 @@ import { ResourceService } from "../../resources/service";
 
 /** Shared draft and render lifetime used by all workspace sections. */
 export interface SectionContext {
-  app: App;
-  config: ConfigController;
-  service: ResourceService;
-  containerEl: HTMLElement;
-  epoch: number;
-  removed: { resource: ResourceConfig; index: number }[];
-  render(): void;
+	app: App;
+	config: ConfigController;
+	service: ResourceService;
+	containerEl: HTMLElement;
+	epoch: number;
+	removed: { resource: ResourceConfig; index: number }[];
+	render(): void;
 }
